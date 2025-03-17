@@ -1,0 +1,36 @@
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('visitante') }} {% endblock %} {% block eventos_text %} Visitante Web {% endblock %} {% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">{{ titulo if titulo else "Lista de Eventos" }}</h2>
+
+    <div class="row">
+        {% if eventos%} {% for evento in eventos %}
+        <div class="col-md-4">
+            <div class="card event-card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ evento.eve_nombre }}</h5>
+                    <p class="card-text">
+                        {{ evento.eve_descripcion }}<br>
+                        <strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}<br>
+                        <strong>📅 Fecha Inicio:</strong> {{ evento.eve_fecha_inicio }}<br>
+                        <strong>🏁 Fecha Fin:</strong> {{ evento.eve_fecha_fin }}<br>
+                        <strong>🔹 Estado:</strong> <span class="badge bg-secondary">{{ evento.eve_estado }}</span>
+                    </p>
+                    <div class="text-center">
+                        <a href="{{ url_for('evento_detalle', eve_id=evento.eve_id) }}" class="btn btn-primary">
+                                Ver Detalle
+                            </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %} {% else %}
+        <div class="col-12">
+            <p class="no-events">No hay eventos disponibles en este momento.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} {% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{{ url_for('lista_eventos') }}">Ver Eventos</a></li>
+<li class="nav-item"><a class="nav-link" href="{{ url_for('buscar_eventos') }}">Buscar Eventos</a></li>
+{% endblock %}

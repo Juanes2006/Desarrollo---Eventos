@@ -1,0 +1,34 @@
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('ventana') }} {% endblock %} {% block eventos_text %} Administrar Eventos {% endblock %} {% block content %}
+<h2>Editar Evento</h2>
+<form method="POST" action="{{ url_for('editar_evento', eve_id=evento.eve_id) }}">
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre</label>
+        <input type="text" class="form-control" name="nombre" id="nombre" value="{{ evento.eve_nombre }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="descripcion" class="form-label">Descripción</label>
+        <textarea class="form-control" name="descripcion" id="descripcion">{{ evento.eve_descripcion }}</textarea>
+    </div>
+    <div class="mb-3">
+        <label for="ciudad" class="form-label">Ciudad</label>
+        <input type="text" class="form-control" name="ciudad" id="ciudad" value="{{ evento.eve_ciudad }}">
+    </div>
+    <div class="mb-3">
+        <label for="lugar" class="form-label">Lugar</label>
+        <input type="text" class="form-control" name="lugar" id="lugar" value="{{ evento.eve_lugar }}">
+    </div>
+    <div class="mb-3">
+        <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+        <input type="date" class="form-control" name="fecha_inicio" id="fecha_inicio" value="{{ evento.eve_fecha_inicio }}">
+    </div>
+    <div class="mb-3">
+        <label for="fecha_fin" class="form-label">Fecha Fin</label>
+        <input type="date" class="form-control" name="fecha_fin" id="fecha_fin" value="{{ evento.eve_fecha_fin }}">
+    </div>
+    <button type="submit" class="btn btn-success">Guardar Cambios</button>
+</form>
+{% endblock %} {% block nav_links %}
+
+<li class="nav-item"><a class="nav-link" href="{{ url_for('crear_evento') }}">Crear Evento</a></li>
+
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('super_adm') }} {% endblock %} {% block eventos_text %} Super Admin {% endblock %} {% block content %}
+<div class="container mt-4">
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+
+
+    <h2 class="text-center mb-4">Super Admin</h2>
+
+    <div class="row">
+        {% if eventos %} {% for evento in eventos %}
+        <div class="col-md-4">
+            <div class="card event-card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ evento.eve_nombre }}</h5>
+                    <p class="card-text">
+                        {{ evento.eve_descripcion }}<br>
+                        <strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}<br>
+                        <strong>📅 Fecha Inicio:</strong> {{ evento.eve_fecha_inicio }}<br>
+                        <strong>🏁 Fecha Fin:</strong> {{ evento.eve_fecha_fin }}<br>
+                        <strong>🔹 Estado:</strong>
+                        <span class="badge {% if evento.eve_estado == 'ACTIVO' %} bg-success {% else %} bg-warning {% endif %}">
+                                {{ evento.eve_estado }}
+                            </span>
+                    </p>
+                    <div class="text-center">
+                        <a href="{{ url_for('ver_evento_superadmin', eve_id=evento.eve_id) }}" class="btn btn-primary">
+                                Ver Detalle
+                            </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %} {% else %}
+        <div class="col-12">
+            <p class="alert alert-warning">No hay eventos disponibles en este momento.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white text-center">
+            <h2 class="mb-0">Detalle del Evento</h2>
+        </div>
+        <div class="card-body text-center">
+            <h3 class="text-primary">{{ evento.eve_nombre }}</h3>
+            <p class="text-muted">{{ evento.eve_descripcion }}</p>
+
+            <hr>
+
+            <p><strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}</p>
+            <p><strong>🏢 Lugar:</strong> {{ evento.eve_lugar }}</p>
+            <p><strong>📅 Fecha Inicio:</strong> {{ evento.eve_fecha_inicio }}</p>
+            <p><strong>📅 Fecha Fin:</strong> {{ evento.eve_fecha_fin }}</p>
+
+            <p><strong>📌 Estado:</strong>
+                <span class="badge {% if evento.eve_estado == 'ACTIVO' %} bg-success {% else %} bg-warning {% endif %}">
+                    {{ evento.eve_estado }}
+                </span>
+            </p>
+
+            {% if evento.eve_estado == "CREADO" %}
+            <form action="{{ url_for('activar_evento', eve_id=evento.eve_id) }}" method="POST">
+                <button type="submit" class="btn btn-success mt-3">✅ Activar Evento</button>
+            </form>
+            {% endif %}
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('eventos_superadmin') }}" class="btn btn-secondary">Volver</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

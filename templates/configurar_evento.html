@@ -1,0 +1,24 @@
+{% extends 'base.html' %} {% block content %}
+<h2>Configurar Características de {{ evento.eve_nombre }}</h2>
+
+<form method="POST" action="{{ url_for('configurar_evento', eve_id=evento.eve_id) }}">
+    <div class="mb-3">
+        <label for="parametro" class="form-label">Parámetro</label>
+        <input type="text" class="form-control" name="parametro" id="parametro" required>
+    </div>
+    <div class="mb-3">
+        <label for="valor" class="form-label">Valor</label>
+        <input type="text" class="form-control" name="valor" id="valor" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Agregar Característica</button>
+</form>
+
+<hr>
+
+<h4>Características Actuales</h4>
+<ul>
+    {% for car in evento.caracteristicas %}
+    <li>{{ car.car_parametro }}: {{ car.car_valor }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}
