@@ -1,4 +1,7 @@
-{% extends 'base.html' %} {% block eventos_url %} {{ url_for('super_adm') }} {% endblock %} {% block eventos_text %} Super Admin {% endblock %} {% block content %}
+{% extends 'base.html' %} {% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{{ url_for('agregar_area') }}">Agregar Area</a></li>
+<li class="nav-item"><a class="nav-link" href="{{ url_for('agregar_categoria') }}">Aregar Categoria</a></li>
+{% endblock %} {% block eventos_url %} {{ url_for('super_adm') }} {% endblock %} {% block eventos_text %} Super Admin {% endblock %} {% block content %}
 <div class="container mt-4">
     {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %}
     <div class="container mt-3">
@@ -14,7 +17,11 @@
     {% endif %} {% endwith %}
 
 
-    <h2 class="text-center mb-4">Super Admin</h2>
+
+    <div class="text-center">
+        <h2 class="text-center mb-4">Super Admin</h2>
+        <p class="lead">Aquí podrás ver y Activar los eventos creados.</p>
+    </div>
 
     <div class="row">
         {% if eventos %} {% for evento in eventos %}

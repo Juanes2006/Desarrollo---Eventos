@@ -14,9 +14,7 @@
             <a class="navbar-brand" href="{% block eventos_url %}{{ url_for('lista_eventos') }}{% endblock %}">{% block eventos_text %}Eventos{% endblock %}</a>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    {% block nav_links %}
-                    <!-- Enlaces adicionales por defecto -->
-                    {% endblock %}
+                    {% block nav_links %} {% endblock %}
                 </ul>
             </div>
         </div>

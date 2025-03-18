@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
+
 from flask_migrate import Migrate
 from datetime import datetime, date
 
@@ -51,18 +52,6 @@ class EventoCategoria(db.Model):
     eve_cat_evento_fk = db.Column(db.Integer, db.ForeignKey('eventos.eve_id'), primary_key=True)
     eve_cat_categoria_fk = db.Column(db.Integer, db.ForeignKey('categorias.cat_codigo'), primary_key=True)
 
-# Tabla: CARACTERISTICAS
-class Caracteristica(db.Model):
-    __tablename__ = 'caracteristicas'
-    car_id = db.Column(db.Integer, primary_key=True)
-    car_parametro = db.Column(db.String(45))
-    car_valor = db.Column(db.String(45))
-
-# Tabla intermedia para la relación muchos-a-muchos EVENTOS_CARACTERISTICAS
-class EventoCaracteristica(db.Model):
-    __tablename__ = 'eventos_caracteristicas'
-    eve_car_evento_fk = db.Column(db.Integer, db.ForeignKey('eventos.eve_id'), primary_key=True)
-    eve_car_caracteristica_fk = db.Column(db.Integer, db.ForeignKey('caracteristicas.car_id'), primary_key=True)
 
 # Tabla: EVENTOS
 class Evento(db.Model):
@@ -82,7 +71,6 @@ class Evento(db.Model):
     
     # Relaciones muchos-a-muchos
     categorias = db.relationship('Categoria', secondary='eventos_categorias', backref='eventos')
-    caracteristicas = db.relationship('Caracteristica', secondary='eventos_caracteristicas', backref='eventos')
 
 # CREAR LAS TABLAS
 
@@ -102,7 +90,6 @@ def ventana():
     return render_template('administrador_evento.html', eventos=eventos)
 
 
-
 @app.route('/super_admin')
 def super_adm():
     eventos = Evento.query.all()  # Obtener todos los eventos
@@ -112,7 +99,6 @@ def super_adm():
 def eventos_superadmin():
     if request.method == "POST":
         pass
-
     eventos = Evento.query.all()
     return render_template("super_admin.html", eventos=eventos)
 
@@ -124,6 +110,7 @@ def eventos_proximos():
     eventos = Evento.query.filter_by(eve_estado="ACTIVO").all()
 
     return render_template("lista_eventos.html", titulo="Eventos Próximos", eventos=eventos)
+
 # HU02: Realizar búsquedas de eventos de mi interés usando diferentes filtros
 @app.route("/visitante_web/buscar_eventos", methods=["GET", "POST"])
 def buscar_eventos():
@@ -140,6 +127,8 @@ def buscar_eventos():
         # Agrega el filtro para el nombre si se ha ingresado
         if nombre:
             query = query.filter(Evento.eve_nombre.contains(nombre))
+            
+        
         
         # Agrega el filtro para la fecha (ejemplo: eventos que comienzan a partir de una fecha)
         if fecha_inicio_str:
@@ -163,13 +152,13 @@ def buscar_eventos():
 @app.route("/evento_detalle/<int:eve_id>")
 def evento_detalle(eve_id):
     evento = Evento.query.get_or_404(eve_id)
+
     return render_template("detalle_evento.html", evento=evento)
 
 # HU50: Crear un nuevo evento
 @app.route("/administrador/crear_evento", methods=["GET", "POST"])
 def crear_evento():
     if request.method == "POST":
-        # Verifica que sea el formulario de creación
         if "crear_evento" in request.form:
             nombre = request.form.get("nombre")
             descripcion = request.form.get("descripcion")
@@ -179,20 +168,24 @@ def crear_evento():
             fecha_fin_str = request.form.get("fecha_fin")
             cobro_str = request.form.get("cobro")
             cupos_str = request.form.get("cupos")
-
+            
             fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d") if fecha_inicio_str else None
             fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d") if fecha_fin_str else None
-
-            # Procesa cobro y cupos si se envían, de lo contrario deja None
             cobro = float(cobro_str) if cobro_str else None
             cupos = int(cupos_str) if cupos_str else None
+
+            # Obtén la categoría seleccionada
+            # Si usas un select único, se utiliza get()
+            categoria_id = request.form.get("categorias")
+            # Si el campo es múltiple, usa getlist:
+            # categoria_ids = request.form.getlist("categorias")
 
             admin_demo = AdministradorEvento.query.first()
             if not admin_demo:
                 admin_demo = AdministradorEvento(
                     adm_id="admin1", 
-                    adm_nombre="Admin Demo", 
-                    adm_correo="demo@admin.com",
+                    adm_nombre="Juan Esteban M", 
+                    adm_correo="Juanes@admin.com",
                     adm_telefono="123456"
                 )
                 db.session.add(admin_demo)
@@ -213,30 +206,24 @@ def crear_evento():
             db.session.add(nuevo_evento)
             db.session.commit()
 
-            flash(f"¡Se ha creado un nuevo evento! {nombre}")
+            # Asocia la categoría seleccionada al evento, si se eligió alguna
+            if categoria_id:
+                categoria = Categoria.query.get(categoria_id)
+                if categoria:
+                    nuevo_evento.categorias.append(categoria)
+                    db.session.commit()
 
+            flash(f"¡Se ha creado un nuevo evento: {nuevo_evento.eve_nombre}!", "success")
             return redirect(url_for("super_adm"))
-    eventos = Evento.query.all()  # Obtiene todos los eventos creados
-    return render_template("crear_evento.html", eventos=eventos)
+
+    # Para el método GET, además de los eventos, obtenemos las categorías para el select
+    categorias = Categoria.query.all()
+    eventos = Evento.query.all()  # Si deseas mostrarlos en la vista
+    return render_template("crear_evento.html", eventos=eventos, categorias=categorias)
 
 
-# HU51: Configurar las características del evento
-@app.route("/configurar_evento/<int:eve_id>", methods=["GET", "POST"])
-def configurar_evento(eve_id):
-    evento = Evento.query.get_or_404(eve_id)
-    if request.method == "POST":
-        parametro = request.form.get("parametro")
-        valor = request.form.get("valor")
-        car = Caracteristica.query.filter_by(car_parametro=parametro, car_valor=valor).first()
-        if not car:
-            car = Caracteristica(car_parametro=parametro, car_valor=valor)
-            db.session.add(car)
-            db.session.commit()
-        evento.caracteristicas.append(car)
-        db.session.commit()
-        flash("Características del evento actualizadas.")
-        return redirect(url_for("configurar_evento", eve_id=evento.eve_id))
-    return render_template("configurar_evento.html", evento=evento)
+
+
 
 # HU52: Editar la información de un evento
 @app.route("/administrador/editar_evento/<int:eve_id>", methods=["GET", "POST"])
@@ -282,11 +269,49 @@ def activar_evento(eve_id):
     return redirect(url_for("eventos_superadmin"))
 
 
-# HU89: Notificación cuando se crea un nuevo evento (Simulación)
-@app.route("/notificacion_nuevo_evento")
-def notificacion_nuevo_evento():
-    flash("Nuevo evento creado por un Administrador.", "info")
-    return redirect(url_for("eventos_activos"))
+
+
+
+
+@app.route("/superadmin/agregar_area", methods=["GET", "POST"])
+def agregar_area():
+    if request.method == "POST":
+        are_nombre = request.form.get("are_nombre")
+        are_descripcion = request.form.get("are_descripcion")
+
+        # Crear el objeto Area
+        nueva_area = Area(are_nombre=are_nombre, are_descripcion=are_descripcion)
+        db.session.add(nueva_area)
+        db.session.commit()
+
+        flash(f"Área '{are_nombre}' agregada exitosamente.", "success")
+        return redirect(url_for("agregar_area"))
+
+    return render_template("agregar_area.html")
+
+@app.route("/superadmin/agregar_categoria", methods=["GET", "POST"])
+def agregar_categoria():
+    if request.method == "POST":
+        cat_nombre = request.form.get("cat_nombre")
+        cat_descripcion = request.form.get("cat_descripcion")
+        cat_area_fk = request.form.get("cat_area_fk")  # Este valor es el ID del área seleccionada
+
+        # Crear el objeto Categoria
+        nueva_categoria = Categoria(
+            cat_nombre=cat_nombre,
+            cat_descripcion=cat_descripcion,
+            cat_area_fk=cat_area_fk
+        )
+        db.session.add(nueva_categoria)
+        db.session.commit()
+
+        flash(f"Categoría '{cat_nombre}' agregada exitosamente al área.", "success")
+        return redirect(url_for("agregar_categoria"))
+
+    # Para el método GET, obtener todas las áreas disponibles para el select
+    areas = Area.query.all()
+    return render_template("agregar_categoria.html", areas=areas)
+
 
 
 

@@ -1,9 +1,4 @@
-{% extends 'base.html' %}
-
-{% block eventos_url %} {{ url_for('visitante') }} {% endblock %}
-{% block eventos_text %} Visitante Web {% endblock %}
-
-{% block content %}
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('visitante') }} {% endblock %} {% block eventos_text %} Visitante Web {% endblock %} {% block content %}
 <div class="container">
     <h2 class="mb-4 text-center">🔎 Buscar Eventos</h2>
 
@@ -44,9 +39,7 @@
     <p class="text-muted text-center mt-3">No se encontraron eventos. Intenta con otro filtro.</p>
     {% endif %}
 </div>
-{% endblock %}
-
-{% block nav_links %}
+{% endblock %} {% block nav_links %}
 <li class="nav-item"><a class="nav-link" href="{{ url_for('lista_eventos') }}">Ver Eventos</a></li>
 <li class="nav-item"><a class="nav-link" href="{{ url_for('buscar_eventos') }}">Buscar Eventos</a></li>
 {% endblock %}

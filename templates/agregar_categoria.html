@@ -1,0 +1,28 @@
+{% extends 'base.html' %} {% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{{ url_for('agregar_area') }}">Agregar Area</a></li>
+<li class="nav-item"><a class="nav-link" href="{{ url_for('agregar_categoria') }}">Aregar Categoria</a></li>
+{% endblock %} {% block eventos_url %} {{ url_for('super_adm') }} {% endblock %} {% block eventos_text %} Super Admin {% endblock %} {% block content %}
+<div class="container mt-4">
+    <h2>Agregar Categoría a un Área</h2>
+    <form method="POST" action="{{ url_for('agregar_categoria') }}">
+        <div class="mb-3">
+            <label for="cat_nombre" class="form-label">Nombre de la Categoría</label>
+            <input type="text" class="form-control" name="cat_nombre" id="cat_nombre" required>
+        </div>
+        <div class="mb-3">
+            <label for="cat_descripcion" class="form-label">Descripción de la Categoría</label>
+            <textarea class="form-control" name="cat_descripcion" id="cat_descripcion"></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="cat_area_fk" class="form-label">Área</label>
+            <select class="form-select" name="cat_area_fk" id="cat_area_fk" required>
+                <option value="">Seleccione un área</option>
+                {% for area in areas %}
+                <option value="{{ area.are_codigo }}">{{ area.are_nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Agregar Categoría</button>
+    </form>
+</div>
+{% endblock %}

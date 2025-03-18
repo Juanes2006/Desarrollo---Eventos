@@ -1,7 +1,6 @@
 {% extends 'base.html' %} {% block eventos_url %} {{ url_for('ventana') }} {% endblock %} {% block eventos_text %} Administrar Eventos {% endblock %} {% block content %}
 <h2>Crear Evento</h2>
 <form method="POST" action="{{ url_for('crear_evento') }}">
-    <!-- Identificador para este formulario -->
     <input type="hidden" name="crear_evento" value="1">
 
     <div class="mb-3">
@@ -36,6 +35,14 @@
     <div class="mb-3">
         <label for="cupos" class="form-label">Cupos (opcional)</label>
         <input type="number" class="form-control" name="cupos" id="cupos" placeholder="Número de cupos">
+    </div>
+    <div class="mb-3">
+        <label for="categorias" class="form-label">Categoría del Evento</label>
+        <select name="categorias" id="categorias" class="form-select">
+            {% for categoria in categorias %}
+                <option value="{{ categoria.cat_codigo }}">{{ categoria.cat_nombre }}</option>
+            {% endfor %}
+        </select>
     </div>
     <button type="submit" class="btn btn-primary">Crear</button>
 </form>
