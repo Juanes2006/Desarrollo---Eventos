@@ -27,11 +27,16 @@
         <label for="fecha_fin" class="form-label">Fecha Fin</label>
         <input type="date" class="form-control" name="fecha_fin" id="fecha_fin">
     </div>
-    <!-- Campos opcionales -->
+
     <div class="mb-3">
-        <label for="cobro" class="form-label">Cobro (opcional)</label>
-        <input type="number" step="0.01" class="form-control" name="cobro" id="cobro" placeholder="Monto en $">
+        <label for="cobro" class="form-label">¿Cobro?</label>
+        <select class="form-control" name="cobro" id="cobro">
+            <option value="">Selecciona una opción</option>
+            <option value="si">Sí</option>
+            <option value="no">No</option>
+        </select>
     </div>
+    <!-- Campo opcional -->
     <div class="mb-3">
         <label for="cupos" class="form-label">Cupos (opcional)</label>
         <input type="number" class="form-control" name="cupos" id="cupos" placeholder="Número de cupos">

@@ -25,6 +25,25 @@
             <p><strong>💲 Valor Boleta:</strong> <span class="badge bg-warning text-dark">${{ evento.cobro }}</span></p>
             {% endif %} {% if evento.cupos is not none %}
             <p><strong>👥 Cupos Disponibles:</strong> <span class="badge bg-info text-dark">{{ evento.cupos }}</span></p>
+            {% endif %} {% if categorias %}
+            <hr>
+            <h4 class="mt-4">📌 Área y Categoría(s) del Evento</h4>
+            <table class="table table-bordered table-hover mt-2">
+                <thead class="table-dark">
+                    <tr>
+                        <th>🏢 Área</th>
+                        <th>📂 Categoría</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for categoria in categorias %}
+                    <tr>
+                        <td>{{ categoria.area.are_nombre }}</td>
+                        <td>{{ categoria.cat_nombre }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             {% endif %}
 
             <hr>

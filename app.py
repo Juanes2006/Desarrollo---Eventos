@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 from flask_migrate import Migrate
 from datetime import datetime, date
+from sqlalchemy.orm import joinedload
 
 app = Flask(__name__)
 app.secret_key = "clave_secreta_para_flash"
@@ -65,9 +66,11 @@ class Evento(db.Model):
     eve_fecha_fin = db.Column(db.Date)
     eve_estado = db.Column(db.String(45))
     adm_id = db.Column(db.String(20), db.ForeignKey('administradores_evento.adm_id'))
-    ##opcionales
-    cobro = db.Column(db.Float, nullable=True)
+    
+    # Change from Float to String with "Sí" or "No"
+    cobro = db.Column(db.String(2), nullable=False, default="No")  
     cupos = db.Column(db.Integer, nullable=True)
+
     
     # Relaciones muchos-a-muchos
     categorias = db.relationship('Categoria', secondary='eventos_categorias', backref='eventos')
@@ -151,7 +154,14 @@ def buscar_eventos():
 # HU03: Acceder a información detallada sobre los eventos de mi interés
 @app.route("/evento_detalle/<int:eve_id>")
 def evento_detalle(eve_id):
-    evento = Evento.query.get_or_404(eve_id)
+    evento = (
+        Evento.query
+        .filter_by(eve_id=eve_id)
+        .options(
+            joinedload(Evento.categorias).joinedload(Categoria.area)  # Carga las categorías y áreas
+        )
+        .first_or_404()
+    )
 
     return render_template("detalle_evento.html", evento=evento)
 
@@ -159,67 +169,52 @@ def evento_detalle(eve_id):
 @app.route("/administrador/crear_evento", methods=["GET", "POST"])
 def crear_evento():
     if request.method == "POST":
-        if "crear_evento" in request.form:
-            nombre = request.form.get("nombre")
-            descripcion = request.form.get("descripcion")
-            ciudad = request.form.get("ciudad")
-            lugar = request.form.get("lugar")
-            fecha_inicio_str = request.form.get("fecha_inicio")
-            fecha_fin_str = request.form.get("fecha_fin")
-            cobro_str = request.form.get("cobro")
-            cupos_str = request.form.get("cupos")
-            
-            fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d") if fecha_inicio_str else None
-            fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d") if fecha_fin_str else None
-            cobro = float(cobro_str) if cobro_str else None
-            cupos = int(cupos_str) if cupos_str else None
+        nombre = request.form.get("nombre")
+        descripcion = request.form.get("descripcion")
+        ciudad = request.form.get("ciudad")
+        lugar = request.form.get("lugar")
+        fecha_inicio_str = request.form.get("fecha_inicio")
+        fecha_fin_str = request.form.get("fecha_fin")
+        cobro_str = request.form.get("cobro")  
+        cupos_str = request.form.get("cupos")
+        
+        fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d") if fecha_inicio_str else None
+        fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d") if fecha_fin_str else None
+        cupos = int(cupos_str) if cupos_str else None
 
-            # Obtén la categoría seleccionada
-            # Si usas un select único, se utiliza get()
-            categoria_id = request.form.get("categorias")
-            # Si el campo es múltiple, usa getlist:
-            # categoria_ids = request.form.getlist("categorias")
-
-            admin_demo = AdministradorEvento.query.first()
-            if not admin_demo:
-                admin_demo = AdministradorEvento(
-                    adm_id="admin1", 
-                    adm_nombre="Juan Esteban M", 
-                    adm_correo="Juanes@admin.com",
-                    adm_telefono="123456"
-                )
-                db.session.add(admin_demo)
-                db.session.commit()
-
-            nuevo_evento = Evento(
-                eve_nombre=nombre,
-                eve_descripcion=descripcion,
-                eve_ciudad=ciudad,
-                eve_lugar=lugar,
-                eve_fecha_inicio=fecha_inicio,
-                eve_fecha_fin=fecha_fin,
-                eve_estado="CREADO",
-                adm_id=admin_demo.adm_id,
-                cobro=cobro,
-                cupos=cupos
+        admin_demo = AdministradorEvento.query.first()
+        if not admin_demo:
+            admin_demo = AdministradorEvento(
+                adm_id="admin1", 
+                adm_nombre="Juan Esteban M", 
+                adm_correo="Juanes@admin.com",
+                adm_telefono="123456"
             )
-            db.session.add(nuevo_evento)
+            db.session.add(admin_demo)
             db.session.commit()
 
-            # Asocia la categoría seleccionada al evento, si se eligió alguna
-            if categoria_id:
-                categoria = Categoria.query.get(categoria_id)
-                if categoria:
-                    nuevo_evento.categorias.append(categoria)
-                    db.session.commit()
+        nuevo_evento = Evento(
+            eve_nombre=nombre,
+            eve_descripcion=descripcion,
+            eve_ciudad=ciudad,
+            eve_lugar=lugar,
+            eve_fecha_inicio=fecha_inicio,
+            eve_fecha_fin=fecha_fin,
+            eve_estado="CREADO",
+            adm_id=admin_demo.adm_id,
+            cobro=cobro_str,  # Now storing "Sí" or "No"
+            cupos=cupos
+        )
+        db.session.add(nuevo_evento)
+        db.session.commit()
 
-            flash(f"¡Se ha creado un nuevo evento: {nuevo_evento.eve_nombre}!", "success")
-            return redirect(url_for("super_adm"))
+        flash(f"¡Se ha creado un nuevo evento: {nuevo_evento.eve_nombre}!", "success")
+        return redirect(url_for("super_adm"))
 
-    # Para el método GET, además de los eventos, obtenemos las categorías para el select
     categorias = Categoria.query.all()
     eventos = Evento.query.all()  # Si deseas mostrarlos en la vista
-    return render_template("crear_evento.html", eventos=eventos, categorias=categorias)
+    return render_template("crear_evento.html",eventos=eventos, categorias=categorias)
+
 
 
 
@@ -238,10 +233,16 @@ def editar_evento(eve_id):
         fecha_fin_str = request.form.get("fecha_fin")
         evento.eve_fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d") if fecha_inicio_str else None
         evento.eve_fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d") if fecha_fin_str else None
+        evento.cobro = request.form.get("cobro")  
+
         db.session.commit()
         flash("Evento editado con éxito.")
         return redirect(url_for("lista_eventos"))
     return render_template("editar_evento.html", evento=evento)
+
+
+
+
 
 # HU90: Ver listado de los eventos activos
 @app.route("/eventos_activos")
