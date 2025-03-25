@@ -22,7 +22,8 @@
             </p>
 
             {% if evento.cobro is not none %}
-            <p><strong>💲 Valor Boleta:</strong> <span class="badge bg-warning text-dark">${{ evento.cobro }}</span></p>
+            <p><strong>💲Cobro de Boleteria
+                :</strong> <span class="badge bg-warning text-dark">{{ evento.cobro }}</span></p>
             {% endif %} {% if evento.cupos is not none %}
             <p><strong>👥 Cupos Disponibles:</strong> <span class="badge bg-info text-dark">{{ evento.cupos }}</span></p>
             {% endif %} {% if categorias %}
