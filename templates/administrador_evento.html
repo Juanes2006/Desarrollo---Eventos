@@ -1,18 +1,12 @@
-{% extends 'base.html' %}
-
-{% block eventos_url %} {{ url_for('ventana') }} {% endblock %}
-{% block eventos_text %} Administrar Eventos {% endblock %}
-
-{% block nav_links %}
-<li class="nav-item">
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('ventana') }} {% endblock %} {% block eventos_text %} Administrar Eventos {% endblock %} {% block nav_links %}
+<li class="nav-item d-none d-md-block">
     <a class="nav-link btn btn-success text-white" href="{{ url_for('crear_evento') }}">
         ➕ Crear Evento
     </a>
 </li>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <div class="container mt-4">
+
     <h1 class="text-center">📌 Panel de Administración</h1>
     <p class="text-muted text-center">Aquí puedes seleccionar y editar los eventos existentes:</p>
 
@@ -24,18 +18,17 @@
             </tr>
         </thead>
         <tbody>
-            {% if eventos %}
-                {% for evento in eventos %}
-                <tr>
-                    <td class="align-middle">{{ evento.eve_nombre }}</td>
-                    <td class="text-center">
-                        <a class="btn btn-warning btn-sm" href="{{ url_for('editar_evento', eve_id=evento.eve_id) }}">
+            {% if eventos %} {% for evento in eventos %}
+            <tr>
+                <td class="align-middle">{{ evento.eve_nombre }}</td>
+                <td class="text-center">
+                    <a class="btn btn-warning btn-sm" href="{{ url_for('editar_evento', eve_id=evento.eve_id) }}">
                             ✏️ Editar
                         </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            {% else %}
+                </td>
+
+            </tr>
+            {% endfor %} {% else %}
             <tr>
                 <td colspan="2" class="text-center text-muted py-3">
                     🚀 No hay eventos creados.
@@ -44,5 +37,12 @@
             {% endif %}
         </tbody>
     </table>
+
+    <div class="text-center mb-4 d-md-none">
+        <a class="btn btn-success btn-sm" style="width: 100%; max-width: 200px;" href="{{ url_for('crear_evento') }}">
+            ➕ Crear Evento
+        </a>
+    </div>
+
 </div>
 {% endblock %}

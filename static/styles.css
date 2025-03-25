@@ -1,14 +1,23 @@
 /* 🎨 Paleta de colores */
+
 :root {
-    --primary-color: #FF6F00; /* Naranja principal */
-    --secondary-color: #2E2E2E; /* Gris oscuro */
-    --light-color: #FFFFFF; /* Blanco */
-    --hover-color: #FFA726; /* Naranja suave */
-    --background-light: #F5F5F5; /* Gris claro */
-    --shadow-color: rgba(0, 0, 0, 0.1); /* Sombras suaves */
+    --primary-color: #FF6F00;
+    /* Naranja principal */
+    --secondary-color: #2E2E2E;
+    /* Gris oscuro */
+    --light-color: #FFFFFF;
+    /* Blanco */
+    --hover-color: #FFA726;
+    /* Naranja suave */
+    --background-light: #F5F5F5;
+    /* Gris claro */
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    /* Sombras suaves */
 }
 
+
 /* 🌎 Estilo global */
+
 body {
     background-color: var(--background-light);
     color: var(--secondary-color);
@@ -17,7 +26,9 @@ body {
     padding: 0;
 }
 
+
 /* 🔝 Navbar */
+
 .navbar {
     background-color: var(--primary-color) !important;
     padding: 15px;
@@ -43,7 +54,9 @@ body {
     transform: translateY(-2px);
 }
 
+
 /* 📦 Contenedor principal */
+
 .container {
     background-color: var(--light-color);
     padding: 30px;
@@ -52,7 +65,9 @@ body {
     margin-top: 20px;
 }
 
+
 /* 📢 Mensajes flash */
+
 .alert-info {
     background-color: var(--primary-color);
     color: var(--light-color);
@@ -60,7 +75,9 @@ body {
     font-weight: bold;
 }
 
+
 /* 🆕 Tarjetas de contenido */
+
 .card {
     background-color: var(--light-color);
     padding: 20px;
@@ -74,7 +91,9 @@ body {
     transform: translateY(-5px);
 }
 
+
 /* 🔘 Botones */
+
 .btn-custom {
     background-color: var(--primary-color);
     color: var(--light-color);
@@ -90,4 +109,59 @@ body {
 .btn-custom:hover {
     background-color: var(--hover-color);
     transform: translateY(-2px);
+}
+
+
+/* 📱 Adaptación responsiva */
+
+
+/* Para pantallas medianas y menores a 768px */
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 10px;
+    }
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    .navbar-nav .nav-link {
+        padding: 8px 10px;
+        font-size: 0.9rem;
+    }
+    .container {
+        padding: 20px;
+        margin-top: 15px;
+    }
+    .card {
+        padding: 15px;
+    }
+    .btn-custom {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+}
+
+
+/* Para móviles pequeños, menores a 480px */
+
+@media (max-width: 480px) {
+    .navbar {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .navbar-nav {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .navbar-nav .nav-link {
+        width: 100%;
+        text-align: center;
+        padding: 8px 0;
+    }
+    .container {
+        padding: 15px;
+    }
 }
