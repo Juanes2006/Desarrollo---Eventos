@@ -1,6 +1,6 @@
 {% extends 'base.html' %} {% block eventos_url %} {{ url_for('ventana') }} {% endblock %} {% block eventos_text %} Administrar Eventos {% endblock %} {% block content %}
 <h2>Crear Evento</h2>
-<form method="POST" action="{{ url_for('crear_evento') }}">
+<form method="POST" action="{{ url_for('crear_evento') }}" enctype="multipart/form-data">
     <input type="hidden" name="crear_evento" value="1">
 
     <div class="mb-3">
@@ -27,7 +27,6 @@
         <label for="fecha_fin" class="form-label">Fecha Fin</label>
         <input type="date" class="form-control" name="fecha_fin" id="fecha_fin">
     </div>
-
     <div class="mb-3">
         <label for="cobro" class="form-label">¿Cobro?</label>
         <select class="form-control" name="cobro" id="cobro">
@@ -36,7 +35,6 @@
             <option value="no">No</option>
         </select>
     </div>
-    <!-- Campo opcional -->
     <div class="mb-3">
         <label for="cupos" class="form-label">Cupos (opcional)</label>
         <input type="number" class="form-control" name="cupos" id="cupos" placeholder="Número de cupos">
@@ -48,6 +46,10 @@
                 <option value="{{ categoria.cat_codigo }}">{{ categoria.cat_nombre }}</option>
             {% endfor %}
         </select>
+    </div>
+    <div class="mb-3">
+        <label for="imagen" class="form-label">Imagen del Evento</label>
+        <input type="file" class="form-control" name="imagen" id="imagen" accept="image/*">
     </div>
     <button type="submit" class="btn btn-primary">Crear</button>
 </form>

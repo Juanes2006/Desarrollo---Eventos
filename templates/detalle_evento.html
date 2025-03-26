@@ -6,7 +6,11 @@
         </div>
         <div class="card-body text-center">
             <h3 class="text-primary">{{ evento.eve_nombre }}</h3>
-            <p class="text-muted">{{ evento.eve_descripcion }}</p>
+            {% if evento.imagen %}
+            <img src="{{ url_for('static', filename='imagenes/' ~ evento.imagen) }}" class="card-img-top rounded" alt="Imagen del evento" style="max-height: 100%; width: 100%; object-fit: contain;"> {% else %}
+            <p>No hay imagen disponible para este evento.</p>
+            {% endif %}
+            <p class="text-muted ">{{ evento.eve_descripcion }}</p>
 
             <hr>
 
@@ -16,21 +20,21 @@
             <p><strong>📅 Fecha Fin:</strong> {{ evento.eve_fecha_fin }}</p>
 
             <p><strong>📌 Estado:</strong>
-                <span class="badge {% if evento.eve_estado == 'Activo' %} bg-success {% else %} bg-danger {% endif %}">
+                <span class="badge {% if evento.eve_estado=='Activo' %} bg-success {% else %} bg-danger {% endif %} ">
                     {{ evento.eve_estado }}
                 </span>
             </p>
 
             {% if evento.cobro is not none %}
             <p><strong>💲Cobro de Boleteria
-                :</strong> <span class="badge bg-warning text-dark">{{ evento.cobro }}</span></p>
+                :</strong> <span class="badge bg-warning text-dark ">{{ evento.cobro }}</span></p>
             {% endif %} {% if evento.cupos is not none %}
-            <p><strong>👥 Cupos Disponibles:</strong> <span class="badge bg-info text-dark">{{ evento.cupos }}</span></p>
+            <p><strong>👥 Cupos Disponibles:</strong> <span class="badge bg-info text-dark ">{{ evento.cupos }}</span></p>
             {% endif %} {% if categorias %}
             <hr>
-            <h4 class="mt-4">📌 Área y Categoría(s) del Evento</h4>
-            <table class="table table-bordered table-hover mt-2">
-                <thead class="table-dark">
+            <h4 class="mt-4 ">📌 Área y Categoría(s) del Evento</h4>
+            <table class="table table-bordered table-hover mt-2 ">
+                <thead class="table-dark ">
                     <tr>
                         <th>🏢 Área</th>
                         <th>📂 Categoría</th>
@@ -49,9 +53,9 @@
 
             <hr>
 
-            <h4 class="mt-4">⭐ Características del Evento</h4>
-            <table class="table table-bordered table-hover mt-2">
-                <thead class="table-dark">
+            <h4 class="mt-4 ">⭐ Características del Evento</h4>
+            <table class="table table-bordered table-hover mt-2 ">
+                <thead class="table-dark ">
                     <tr>
                         <th>🔹 Parámetro</th>
                         <th>🔸 Valor</th>
@@ -67,8 +71,8 @@
                 </tbody>
             </table>
 
-            <div class="text-center mt-4">
-                <a href="{{ url_for('lista_eventos') }}" class="btn btn-secondary">Volver</a>
+            <div class="text-center mt-4 ">
+                <a href="{{ url_for( 'lista_eventos') }} " class="btn btn-secondary ">Volver</a>
             </div>
         </div>
     </div>

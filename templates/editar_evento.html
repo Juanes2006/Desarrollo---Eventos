@@ -1,6 +1,6 @@
 {% extends 'base.html' %} {% block eventos_url %} {{ url_for('ventana') }} {% endblock %} {% block eventos_text %} Administrar Eventos {% endblock %} {% block content %}
 <h2>Editar Evento</h2>
-<form method="POST" action="{{ url_for('editar_evento', eve_id=evento.eve_id) }}">
+<form method="POST" action="{{ url_for('editar_evento', eve_id=evento.eve_id) }}" enctype="multipart/form-data">
     <div class="mb-3">
         <label for="nombre" class="form-label">Nombre</label>
         <input type="text" class="form-control" name="nombre" id="nombre" value="{{ evento.eve_nombre }}" required>
@@ -24,6 +24,11 @@
     <div class="mb-3">
         <label for="fecha_fin" class="form-label">Fecha Fin</label>
         <input type="date" class="form-control" name="fecha_fin" id="fecha_fin" value="{{ evento.eve_fecha_fin }}">
+    </div>
+    <div class="mb-3">
+        <label for="imagen" class="form-label">Actualizar Imagen (opcional)</label>
+        <input type="file" class="form-control" name="imagen" id="imagen" accept="image/*"> {% if evento.imagen %}
+        <small class="text-muted">Imagen actual: {{ evento.imagen }}</small> {% endif %}
     </div>
     <button type="submit" class="btn btn-success">Guardar Cambios</button>
 </form>

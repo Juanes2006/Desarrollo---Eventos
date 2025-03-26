@@ -1,12 +1,41 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
+
 from flask_sqlalchemy import SQLAlchemy
 
 from flask_migrate import Migrate
 from datetime import datetime, date
 from sqlalchemy.orm import joinedload
 
+import os
+from werkzeug.utils import secure_filename
+
 app = Flask(__name__)
 app.secret_key = "clave_secreta_para_flash"
+
+import os
+from werkzeug.utils import secure_filename
+
+# Configuración para la subida de imágenes
+UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'imagenes')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def allowed_file(filename):
+    """Verifica si el archivo tiene una extensión permitida."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def save_image(file):
+    """
+    Guarda la imagen en la carpeta UPLOAD_FOLDER y retorna el nombre seguro del archivo.
+    Si el archivo no es permitido, retorna None.
+    """
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return filename
+    return None
+
 
 # ------------------------------------------------------------------
 # CONFIGURACIÓN DE LA BASE DE DATOS
@@ -70,6 +99,9 @@ class Evento(db.Model):
     # Change from Float to String with "Sí" or "No"
     cobro = db.Column(db.String(2), nullable=False, default="No")  
     cupos = db.Column(db.Integer, nullable=True)
+    
+    imagen = db.Column(db.String(255), nullable=True)
+
 
     
     # Relaciones muchos-a-muchos
@@ -177,10 +209,14 @@ def crear_evento():
         fecha_fin_str = request.form.get("fecha_fin")
         cobro_str = request.form.get("cobro")  
         cupos_str = request.form.get("cupos")
+
         
         fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d") if fecha_inicio_str else None
         fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d") if fecha_fin_str else None
         cupos = int(cupos_str) if cupos_str else None
+        
+        imagen_file = request.files.get("imagen")
+        imagen_filename = save_image(imagen_file) if imagen_file else None
 
         admin_demo = AdministradorEvento.query.first()
         if not admin_demo:
@@ -203,7 +239,8 @@ def crear_evento():
             eve_estado="CREADO",
             adm_id=admin_demo.adm_id,
             cobro=cobro_str,  # Now storing "Sí" or "No"
-            cupos=cupos
+            cupos=cupos,
+            imagen=imagen_filename  
         )
         db.session.add(nuevo_evento)
         db.session.commit()
@@ -233,7 +270,13 @@ def editar_evento(eve_id):
         fecha_fin_str = request.form.get("fecha_fin")
         evento.eve_fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d") if fecha_inicio_str else None
         evento.eve_fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d") if fecha_fin_str else None
-        evento.cobro = request.form.get("cobro")  
+        evento.cobro = request.form.get("cobro")
+        
+        imagen_file = request.files.get("imagen")
+        if imagen_file and imagen_file.filename != "":
+            imagen_filename = save_image(imagen_file)
+            if imagen_filename:
+                evento.imagen = imagen_filename
 
         db.session.commit()
         flash("Evento editado con éxito.")
