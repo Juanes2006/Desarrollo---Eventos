@@ -1,0 +1,99 @@
+{% extends 'base.html' %} {% block content %}
+<h2 class="mb-4">Inscripción al evento: {{ evento.nombre }}</h2>
+
+<p>Bienvenido. Por favor, selecciona el tipo de inscripción y completa tus datos.</p>
+
+<form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+    <!-- Selección del tipo de inscripción -->
+    <div class="mb-3">
+        <label for="tipo_inscripcion" class="form-label">Elige tu modalidad:</label>
+        <select name="tipo_inscripcion" id="tipo_inscripcion" class="form-select" required onchange="mostrarFormulario()">
+      <option value="">-- Selecciona una opción --</option>
+      <option value="Asistente">Asistente (Pago requerido si el evento lo exige)</option>
+      <option value="Participante">Participante (Se generará automáticamente tu Orden de Registro)</option>
+    </select>
+        <div class="invalid-feedback">Por favor, selecciona un tipo de inscripción.</div>
+    </div>
+
+    <!-- Campos comunes -->
+    <fieldset class="border rounded p-3 mb-3">
+        <legend class="float-none w-auto px-2">Datos Personales</legend>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="user_id" class="form-label">Identificación (ID):</label>
+                <input type="text" name="user_id" id="user_id" class="form-control" placeholder="Ingresa tu ID" required>
+                <div class="invalid-feedback">Este campo es obligatorio.</div>
+            </div>
+            <div class="col-md-6">
+                <label for="nombre" class="form-label">Nombre completo:</label>
+                <input type="text" name="nombre" id="nombre" class="form-control" placeholder="Ingresa tu nombre" required>
+                <div class="invalid-feedback">Este campo es obligatorio.</div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="correo" class="form-label">Correo electrónico:</label>
+                <input type="email" name="correo" id="correo" class="form-control" placeholder="ejemplo@dominio.com" required>
+                <div class="invalid-feedback">Ingresa un correo válido.</div>
+            </div>
+            <div class="col-md-6">
+                <label for="telefono" class="form-label">Teléfono de contacto:</label>
+                <input type="text" name="telefono" id="telefono" class="form-control" placeholder="Ingresa tu teléfono" required>
+                <div class="invalid-feedback">Este campo es obligatorio.</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <!-- Sección para Asistente -->
+    <fieldset id="form_asistente" class="border rounded p-3 mb-3" style="display: none;">
+        <legend class="float-none w-auto px-2">Registro como Asistente</legend>
+        {% if evento.cobro == 'SI' %}
+        <div class="mb-3">
+            <label for="soporte_pago" class="form-label">Adjuntar soporte de pago:</label>
+            <input type="file" name="soporte_pago" id="soporte_pago" class="form-control">
+            <small class="text-muted">Sube el comprobante de pago en formato PDF o imagen.</small>
+        </div>
+        {% else %}
+        <p>El evento no requiere soporte de pago.</p>
+        {% endif %}
+    </fieldset>
+
+    <!-- Sección para Participante -->
+    <fieldset id="form_participante" class="border rounded p-3 mb-3" style="display: none;">
+        <legend class="float-none w-auto px-2">Registro como Participante</legend>
+        <div class="mb-3">
+            <label for="documentos" class="form-label">Adjuntar documentos:</label>
+            <input type="file" name="documentos" id="documentos" class="form-control">
+            <small class="text-muted">Sube los documentos requeridos en formato PDF o imagen.</small>
+        </div>
+        <div class="mb-3">
+            <label for="or" class="form-label">Orden de Registro (OR):</label>
+            <input type="text" name="or" id="or" class="form-control" placeholder="Generado automáticamente" readonly>
+            <small class="text-muted">Se generará automáticamente invirtiendo el número de documento.</small>
+        </div>
+    </fieldset>
+
+    <button type="submit" class="btn btn-primary">Enviar inscripción</button>
+</form>
+
+<script>
+    function mostrarFormulario() {
+        var tipo = document.getElementById("tipo_inscripcion").value;
+        document.getElementById("form_asistente").style.display = (tipo === "Asistente") ? "block" : "none";
+        document.getElementById("form_participante").style.display = (tipo === "Participante") ? "block" : "none";
+    }
+
+    // Si se selecciona Participante, se actualiza automáticamente el campo OR
+    document.getElementById("user_id").addEventListener("input", function() {
+        var tipo = document.getElementById("tipo_inscripcion").value;
+        if (tipo === "Participante") {
+            var userId = this.value;
+            // Invierte el valor del user_id
+            var orValue = userId.split('').reverse().join('');
+            document.getElementById("or").value = orValue;
+        }
+    });
+</script>
+{% endblock %}

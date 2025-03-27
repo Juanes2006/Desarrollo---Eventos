@@ -1,10 +1,12 @@
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, redirect, url_for, flash,request, send_file, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime, date
 from sqlalchemy.orm import joinedload
-import uuid
+from io import BytesIO
+import segno
+import base64
 import os
 from werkzeug.utils import secure_filename
 
@@ -353,9 +355,102 @@ def registrarme_evento(evento_id):
         return redirect(url_for('lista_eventos'))
     
     # Si la solicitud es GET, simplemente renderizamos el formulario
-    return render_template('form_registro.html', evento=evento)
+    return render_template('formulario_registro.html', evento=evento)
 
+# Ruta para mostrar el formulario de consulta de QR
+# Ejemplo de ruta que obtiene los eventos de la BD
+@app.route('/consulta_qr', methods=['GET', 'POST'])
+def consulta_qr():
+    # Obtener todos los eventos de la base de datos
+    events = Evento.query.all()
+    
+    if request.method == 'POST':
+        event_id = request.form.get('event_id')
+        user_id = request.form.get('user_id')
+        if not event_id or not user_id:
+            flash("Debes seleccionar un evento y escribir tu documento.", "warning")
+            return redirect(url_for('consulta_qr'))
+        return redirect(url_for('mostrar_qr', event_id=event_id, user_id=user_id))
+    
+    return render_template('consulta_qr.html', events=events)
 
+# Ruta para mostrar el QR y los detalles del evento seleccionado
+@app.route('/mostrar_qr/<int:event_id>/<string:user_id>')
+def mostrar_qr(event_id, user_id):
+    # Verificar inscripción en Asistentes o Participantes (lógica ya definida)
+    asistente_evento = AsistentesEventos.query.filter_by(
+        asi_eve_asistente_fk=user_id,
+        asi_eve_evento_fk=event_id
+    ).first()
+    participante_evento = None
+    if not asistente_evento:
+        participante_evento = ParticipantesEventos.query.filter_by(
+            par_eve_participante_fk=user_id,
+            par_eve_evento_fk=event_id
+        ).first()
+    
+    if not asistente_evento and not participante_evento:
+        flash("No estás registrado como Asistente ni Participante en este evento.", "danger")
+        return redirect(url_for('consulta_qr'))
+    
+    # Preparar datos para el QR
+    if asistente_evento:
+        qr_data = f"Tipo=Asistente|ID={user_id}|Evento={event_id}|Clave={asistente_evento.asi_eve_clave}"
+        registration_type = "Asistente"
+        user_document = asistente_evento.asi_eve_asistente_fk
+    else:
+        qr_data = f"Tipo=Participante|ID={user_id}|Evento={event_id}|Clave={participante_evento.par_eve_clave}"
+        registration_type = "Participante"
+        user_document = participante_evento.par_eve_participante_fk
+
+    # Generar el QR
+    qr = segno.make(qr_data)
+    buffer = BytesIO()
+    qr.save(buffer, kind='png', scale=5)
+    qr_bytes = buffer.getvalue()
+    qr_b64 = base64.b64encode(qr_bytes).decode('utf-8')
+    
+    # Obtener el evento real desde la base de datos
+    evento = Evento.query.get(event_id)
+    if not evento:
+        flash("El evento no fue encontrado.", "danger")
+        return redirect(url_for('consulta_qr'))
+    
+    return render_template(
+        'mostrar_qr.html',
+        qr_image=qr_b64,
+        evento=evento,  # El objeto 'evento' contiene eve_nombre y eve_descripcion
+        registration_type=registration_type,
+        user_document=user_document,
+        user_id=user_id
+    )
+
+# Ruta para descargar el QR (opcional)
+@app.route('/descargar_qr/<int:event_id>/<string:user_id>')
+def descargar_qr(event_id, user_id):
+    asistente_evento = AsistentesEventos.query.filter_by(
+        asi_eve_asistente_fk=user_id,
+        asi_eve_evento_fk=event_id
+    ).first()
+    participante_evento = None
+    if not asistente_evento:
+        participante_evento = ParticipantesEventos.query.filter_by(
+            par_eve_participante_fk=user_id,
+            par_eve_evento_fk=event_id
+        ).first()
+    if not asistente_evento and not participante_evento:
+        return make_response("No estás registrado en este evento.", 404)
+    
+    if asistente_evento:
+        qr_data = f"Tipo=Asistente|ID={user_id}|Evento={event_id}|Clave={asistente_evento.asi_eve_clave}"
+    else:
+        qr_data = f"Tipo=Participante|ID={user_id}|Evento={event_id}|Clave={participante_evento.par_eve_clave}"
+    
+    qr = segno.make(qr_data)
+    buffer = BytesIO()
+    qr.save(buffer, kind='png', scale=5)
+    buffer.seek(0)
+    return send_file(buffer, mimetype='image/png', as_attachment=True, download_name='qr_code.png')
 
 
 

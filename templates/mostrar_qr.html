@@ -1,0 +1,16 @@
+{% extends 'base.html' %} {% block eventos_url %}{{ url_for('ventana') }}{% endblock %} {% block eventos_text %}Mi Código QR{% endblock %} {% block content %}
+<div class="container mt-5">
+    <h2>Nombre del Evento: {{ evento.eve_nombre }}</h2>
+    <p>{{ evento.eve_descripcion }}</p>
+
+    <p><strong>Registrado como:</strong> {{ registration_type }}</p>
+    <p><strong>Documento:</strong> {{ user_document }}</p>
+    <hr>
+    <h3>Tu Código QR</h3>
+    <img src="data:image/png;base64,{{ qr_image }}" alt="Código QR" class="img-fluid" style="max-width:300px;">
+    <br><br>
+    <a href="{{ url_for('descargar_qr', event_id=evento.eve_id, user_id=user_id) }}" class="btn btn-success">Descargar QR</a>
+</div>
+{% endblock %} {% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{{ url_for('consulta_qr') }}">Consultar otro QR</a></li>
+{% endblock %}

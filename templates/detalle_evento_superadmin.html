@@ -7,7 +7,7 @@
         <div class="card-body text-center">
             <h3 class="text-primary">{{ evento.eve_nombre }}</h3>
             {% if evento.imagen %}
-            <img src="{{ url_for('static', filename='imagenes/' ~ evento.imagen) }}" class="card-img-top rounded" alt="Imagen del evento" style="height: 100%; width: 400px; object-fit: cover;">{% else %}
+            <img src="{{ url_for('static', filename='imagenes/' ~ evento.imagen) }}" class="card-img-top rounded img-fluid" alt="Imagen del evento" style="object-fit: cover; max-width: 100%; height: auto;"> {% else %}
             <p>No hay imagen disponible para este evento.</p>
             {% endif %}
             <p class="text-muted">{{ evento.eve_descripcion }}</p>
