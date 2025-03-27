@@ -7,7 +7,7 @@
         <div class="card-body text-center">
             <h3 class="text-primary">{{ evento.eve_nombre }}</h3>
             {% if evento.imagen %}
-            <img src="{{ url_for('static', filename='imagenes/' ~ evento.imagen) }}" class="card-img-top rounded" alt="Imagen del evento" style="max-height: 100%; width: 100%; object-fit: contain;"> {% else %}
+            <img src="{{ url_for('static', filename='imagenes/' ~ evento.imagen) }}" class="card-img-top rounded" alt="Imagen del evento" style="height: 200px; width: 100%; object-fit: cover;"> {% else %}
             <p>No hay imagen disponible para este evento.</p>
             {% endif %}
             <p class="text-muted ">{{ evento.eve_descripcion }}</p>
@@ -20,7 +20,7 @@
             <p><strong>📅 Fecha Fin:</strong> {{ evento.eve_fecha_fin }}</p>
 
             <p><strong>📌 Estado:</strong>
-                <span class="badge {% if evento.eve_estado=='Activo' %} bg-success {% else %} bg-danger {% endif %} ">
+                <span class="badge {% if evento.eve_estado=='Activo' %} bg-danger {% else %} bg-success{% endif %} ">
                     {{ evento.eve_estado }}
                 </span>
             </p>
