@@ -1,24 +1,30 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
 
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
-
 from flask_migrate import Migrate
 from datetime import datetime, date
 from sqlalchemy.orm import joinedload
-
+import uuid
 import os
 from werkzeug.utils import secure_filename
+
+
 
 app = Flask(__name__)
 app.secret_key = "clave_secreta_para_flash"
 
-import os
-from werkzeug.utils import secure_filename
+
 
 # Configuración para la subida de imágenes
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'imagenes')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'pdf'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
 
 def allowed_file(filename):
     """Verifica si el archivo tiene una extensión permitida."""
@@ -107,12 +113,75 @@ class Evento(db.Model):
     # Relaciones muchos-a-muchos
     categorias = db.relationship('Categoria', secondary='eventos_categorias', backref='eventos')
 
+
+# -----------------------------------------------------------
+#  NUEVAS TABLAS (DIAGRAMA DE ASISTENTES / PARTICIPANTES)
+# -----------------------------------------------------------
+
+# Tabla: ASISTENTES
+class Asistentes(db.Model):
+    __tablename__ = 'asistentes'
+    asi_id = db.Column(db.String(20), primary_key=True)
+    asi_nombre = db.Column(db.String(100))
+    asi_correo = db.Column(db.String(100))
+    asi_telefono = db.Column(db.String(20))
+
+    asistentes_eventos = db.relationship('AsistentesEventos', backref='asistente', lazy=True)
+
+
+# Tabla: ASISTENTES_EVENTOS
+class AsistentesEventos(db.Model):
+    __tablename__ = 'asistentes_eventos'
+    asi_eve_asistente_fk = db.Column(db.String(20), db.ForeignKey('asistentes.asi_id'), primary_key=True)
+    asi_eve_evento_fk = db.Column(db.Integer, db.ForeignKey('eventos.eve_id'), primary_key=True)
+
+    asi_eve_fecha_hora = db.Column(db.DateTime)
+    asi_eve_soporte = db.Column(db.String(255), nullable=True)
+    asi_eve_estado = db.Column(db.String(45))
+    asi_eve_clave = db.Column(db.String(45))
+
+  
+
+
+# Tabla: PARTICIPANTES
+class Participantes(db.Model):
+    __tablename__ = 'participantes'
+    par_id = db.Column(db.String(20), primary_key=True)
+    par_nombre = db.Column(db.String(100))
+    par_correo = db.Column(db.String(100))
+    par_telefono = db.Column(db.String(45))
+
+    # Relación uno a muchos con ParticipantesEventos
+    participantes_eventos = db.relationship('ParticipantesEventos', backref='participante', lazy=True)
+
+
+# Tabla: PARTICIPANTES_EVENTOS
+class ParticipantesEventos(db.Model):
+    __tablename__ = 'participantes_eventos'
+    
+    par_eve_participante_fk = db.Column(db.String(20), db.ForeignKey('participantes.par_id'), primary_key=True)
+    par_eve_evento_fk = db.Column(db.Integer, db.ForeignKey('eventos.eve_id'), primary_key=True)
+
+    par_eve_fecha_hora = db.Column(db.DateTime)
+    par_eve_documentos = db.Column(db.String(255), nullable=True)
+    par_eve_or = db.Column(db.String(255), nullable=True)
+    par_eve_clave = db.Column(db.String(45))         
+
+   
 # CREAR LAS TABLAS
+
+
 
 with app.app_context():
     db.create_all()
 
 # HISTORIAS DE USUARIO
+
+
+
+
+
+
 
 # HU01: Ver los diferentes eventos próximos a realizarse
 @app.route('/visitante_web')
@@ -197,67 +266,101 @@ def evento_detalle(eve_id):
 
     return render_template("detalle_evento.html", evento=evento)
 
-# HU50: Crear un nuevo evento
-@app.route("/administrador/crear_evento", methods=["GET", "POST"])
-def crear_evento():
-    if request.method == "POST":
-        nombre = request.form.get("nombre")
-        descripcion = request.form.get("descripcion")
-        ciudad = request.form.get("ciudad")
-        lugar = request.form.get("lugar")
-        fecha_inicio_str = request.form.get("fecha_inicio")
-        fecha_fin_str = request.form.get("fecha_fin")
-        cobro_str = request.form.get("cobro")  
-        cupos_str = request.form.get("cupos")
 
-        
-        fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d") if fecha_inicio_str else None
-        fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d") if fecha_fin_str else None
-        cupos = int(cupos_str) if cupos_str else None
-        
-        imagen_file = request.files.get("imagen")
-        imagen_filename = save_image(imagen_file) if imagen_file else None
 
-        admin_demo = AdministradorEvento.query.first()
-        if not admin_demo:
-            admin_demo = AdministradorEvento(
-                adm_id="admin1", 
-                adm_nombre="Juan Esteban M", 
-                adm_correo="Juanes@admin.com",
-                adm_telefono="123456"
+
+
+@app.route('/eventos/<int:evento_id>/registrarme', methods=['GET', 'POST'])
+def registrarme_evento(evento_id):
+    evento = Evento.query.get_or_404(evento_id)
+    
+    if request.method == 'POST':
+        tipo = request.form.get('tipo_inscripcion')
+        user_id = request.form.get('user_id')
+        nombre = request.form.get('nombre')
+        correo = request.form.get('correo')
+        telefono = request.form.get('telefono')
+        
+        if tipo not in ["Asistente", "Participante"]:
+            flash("Por favor, selecciona un tipo de inscripción válido.", "warning")
+            return redirect(url_for('registrarme_evento', evento_id=evento_id))
+    
+        if tipo == "Asistente":
+            # Procesa inscripción como Asistente
+            asistente = Asistentes.query.get(user_id)
+            if not asistente:
+                asistente = Asistentes(
+                    asi_id=user_id,
+                    asi_nombre=nombre,
+                    asi_correo=correo,
+                    asi_telefono=telefono
+                )
+                db.session.add(asistente)
+    
+            soporte_pago = None
+            if evento.cobro == 'SI' and 'soporte_pago' in request.files:
+                file = request.files['soporte_pago']
+                if file.filename:
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    soporte_pago = filename
+    
+            registro = AsistentesEventos(
+                asi_eve_asistente_fk=user_id,
+                asi_eve_evento_fk=evento_id,
+                asi_eve_fecha_hora=datetime.utcnow(),
+                asi_eve_soporte=soporte_pago,
+                asi_eve_estado='Registrado',
+                asi_eve_clave='-'
             )
-            db.session.add(admin_demo)
-            db.session.commit()
-
-        nuevo_evento = Evento(
-            eve_nombre=nombre,
-            eve_descripcion=descripcion,
-            eve_ciudad=ciudad,
-            eve_lugar=lugar,
-            eve_fecha_inicio=fecha_inicio,
-            eve_fecha_fin=fecha_fin,
-            eve_estado="CREADO",
-            adm_id=admin_demo.adm_id,
-            cobro=cobro_str,  # Now storing "Sí" or "No"
-            cupos=cupos,
-            imagen=imagen_filename  
-        )
-        db.session.add(nuevo_evento)
+            db.session.add(registro)
+    
+        elif tipo == "Participante":
+            # Procesa inscripción como Participante
+            participante = Participantes.query.get(user_id)
+            if not participante:
+                participante = Participantes(
+                    par_id=user_id,
+                    par_nombre=nombre,
+                    par_correo=correo,
+                    par_telefono=telefono
+                )
+                db.session.add(participante)
+    
+            documentos = None
+            if 'documentos' in request.files:
+                file = request.files['documentos']
+                if file.filename:
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    documentos = filename
+    
+            # Generar automáticamente el OR invirtiendo el número de documento (user_id)
+            or_value = user_id[::-1]
+    
+            registro = ParticipantesEventos(
+                par_eve_participante_fk=user_id,
+                par_eve_evento_fk=evento_id,
+                par_eve_fecha_hora=datetime.utcnow(),
+                par_eve_documentos=documentos,
+                par_eve_or=or_value,  # Se asigna automáticamente el documento invertido
+                par_eve_clave='-'
+            )
+            db.session.add(registro)
+    
         db.session.commit()
-
-        flash(f"¡Se ha creado un nuevo evento: {nuevo_evento.eve_nombre}!", "success")
-        return redirect(url_for("super_adm"))
-
-    categorias = Categoria.query.all()
-    eventos = Evento.query.all()  # Si deseas mostrarlos en la vista
-    return render_template("crear_evento.html",eventos=eventos, categorias=categorias)
+        flash(f"¡Te has registrado exitosamente como {tipo}!", "success")
+        return redirect(url_for('lista_eventos'))
+    
+    # Si la solicitud es GET, simplemente renderizamos el formulario
+    return render_template('form_registro.html', evento=evento)
 
 
 
 
 
 
-# HU52: Editar la información de un evento
+# HU52: Editar la información de un evento 
 @app.route("/administrador/editar_evento/<int:eve_id>", methods=["GET", "POST"])
 def editar_evento(eve_id):
     evento = Evento.query.get_or_404(eve_id)

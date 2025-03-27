@@ -27,8 +27,10 @@
                     </p>
                     <div class="text-center mt-auto">
                         <a href="{{ url_for('evento_detalle', eve_id=evento.eve_id) }}" class="btn btn-primary">
-                            Ver Detalle
-                        </a>
+                            Ver Detalle</a>
+
+
+                        <a href="{{ url_for('registrarme_evento', evento_id=evento.eve_id) }}" class="btn btn-primary">Registrarme</a>
                     </div>
                 </div>
             </div>
