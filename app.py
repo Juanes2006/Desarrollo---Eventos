@@ -306,14 +306,16 @@ def registrarme_evento(evento_id):
                     filename = secure_filename(file.filename)
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     soporte_pago = filename
-    
+
+            clave_asis = user_id[::-1]
+            
             registro = AsistentesEventos(
                 asi_eve_asistente_fk=user_id,
                 asi_eve_evento_fk=evento_id,
                 asi_eve_fecha_hora=datetime.utcnow(),
                 asi_eve_soporte=soporte_pago,
                 asi_eve_estado='Registrado',
-                asi_eve_clave='-'
+                asi_eve_clave=clave_asis
             )
             db.session.add(registro)
     
@@ -338,15 +340,15 @@ def registrarme_evento(evento_id):
                     documentos = filename
     
             # Generar automáticamente el OR invirtiendo el número de documento (user_id)
-            or_value = user_id[::-1]
+            clave_par = user_id[::-1]
     
             registro = ParticipantesEventos(
                 par_eve_participante_fk=user_id,
                 par_eve_evento_fk=evento_id,
                 par_eve_fecha_hora=datetime.utcnow(),
                 par_eve_documentos=documentos,
-                par_eve_or=or_value,  # Se asigna automáticamente el documento invertido
-                par_eve_clave='-'
+                par_eve_or=clave_par,  
+                par_eve_clave=clave_par,
             )
             db.session.add(registro)
     
@@ -419,7 +421,7 @@ def mostrar_qr(event_id, user_id):
     return render_template(
         'mostrar_qr.html',
         qr_image=qr_b64,
-        evento=evento,  # El objeto 'evento' contiene eve_nombre y eve_descripcion
+        evento=evento,  
         registration_type=registration_type,
         user_document=user_document,
         user_id=user_id
