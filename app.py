@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, redirect, url_for, flash,request, send_file, make_response
+from flask  import Flask, render_template, redirect, url_for, flash,request, send_file, make_response, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime, date
@@ -8,6 +8,7 @@ from io import BytesIO
 import segno
 import base64
 import os
+
 from werkzeug.utils import secure_filename
 
 
@@ -254,6 +255,59 @@ def buscar_eventos():
     return render_template("buscar_eventos.html", eventos=eventos)
 
 
+@app.route("/administrador/crear_evento", methods=["GET", "POST"])
+def crear_evento():
+        if request.method == "POST":
+            # Verifica que sea el formulario de creación
+            if "crear_evento" in request.form:
+                nombre = request.form.get("nombre")
+                descripcion = request.form.get("descripcion")
+                ciudad = request.form.get("ciudad")
+                lugar = request.form.get("lugar")
+                fecha_inicio_str = request.form.get("fecha_inicio")
+                fecha_fin_str = request.form.get("fecha_fin")
+                cobro_str = request.form.get("cobro")
+                cupos_str = request.form.get("cupos")
+    
+                fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d") if fecha_inicio_str else None
+                fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d") if fecha_fin_str else None
+    
+                # Procesa cobro y cupos si se envían, de lo contrario deja None
+                cobro = float(cobro_str) if cobro_str else None
+                cupos = int(cupos_str) if cupos_str else None
+    
+                admin_demo = AdministradorEvento.query.first()
+                if not admin_demo:
+                    admin_demo = AdministradorEvento(
+                        adm_id="admin1", 
+                        adm_nombre="Admin Demo", 
+                        adm_correo="demo@admin.com",
+                        adm_telefono="123456"
+                    )
+                    db.session.add(admin_demo)
+                    db.session.commit()
+    
+                nuevo_evento = Evento(
+                    eve_nombre=nombre,
+                    eve_descripcion=descripcion,
+                    eve_ciudad=ciudad,
+                    eve_lugar=lugar,
+                    eve_fecha_inicio=fecha_inicio,
+                    eve_fecha_fin=fecha_fin,
+                    eve_estado="CREADO",
+                    adm_id=admin_demo.adm_id,
+                    cobro=cobro,
+                    cupos=cupos
+                )
+                db.session.add(nuevo_evento)
+                db.session.commit()
+    
+                flash(f"¡Se ha creado un nuevo evento! {nombre}")
+    
+                return redirect(url_for("super_adm"))
+        eventos = Evento.query.all()  # Obtiene todos los eventos creados
+        return render_template("crear_evento.html", eventos=eventos)
+
 # HU03: Acceder a información detallada sobre los eventos de mi interés
 @app.route("/evento_detalle/<int:eve_id>")
 def evento_detalle(eve_id):
@@ -455,7 +509,80 @@ def descargar_qr(event_id, user_id):
     return send_file(buffer, mimetype='image/png', as_attachment=True, download_name='qr_code.png')
 
 
+#HU10: CANCELAR INSCRIPCIÓN A UN EVENTO
+@app.route('/cancelar_inscripcion/<int:evento_id>/<string:user_id>', methods=['GET','POST'])
+def cancelar_inscripcion(evento_id, user_id):
+    asistente_evento = AsistentesEventos.query.filter_by(
+        asi_eve_asistente_fk=user_id,
+        asi_eve_evento_fk=evento_id
+    ).first()
+    participante_evento = None
+    if not asistente_evento:
+        participante_evento = ParticipantesEventos.query.filter_by(
+            par_eve_participante_fk=user_id,
+            par_eve_evento_fk=evento_id
+        ).first()
+    ##### SI SE LLEGA A ENCONTRAR A ALGUIN INCRITO SEA COMO PARTICIPANTE O ASISTENTE SE BORRA DE LA BD TANTO (ASIS) COMO (ASIS_EVENTOS) TAMBIEN BORRO LOS DOCS DE MI LOCAL
+    if asistente_evento:
+        db.session.delete(asistente_evento)
+        usuario = Asistentes.query.filter_by(asi_id=user_id).first()
+        if usuario:
+            # Obtener la ruta del archivo de soporte (se asume que es relativa, por ejemplo: "soporte.pdf")
+            ruta_archivo = asistente_evento.asi_eve_soporte  
+            
+            # Si la ruta existe, construir la ruta absoluta
+            if ruta_archivo:
+                ruta_archivo = os.path.join(current_app.root_path, 'static', 'uploads', ruta_archivo.strip())
+            
+            # Eliminar el registro del usuario de la base de datos
+            db.session.delete(usuario)
+            db.session.commit()
+            
+            # Intentar eliminar el archivo del sistema
+            if ruta_archivo and os.path.exists(ruta_archivo):
+                try:
+                    os.remove(ruta_archivo)
+                    flash("Archivo de soporte eliminado del sistema.", "success")
+                except Exception as e:
+                    flash(f"No se pudo eliminar el archivo de soporte: {str(e)}", "warning")
+            else:
+                flash("La ruta del archivo de soporte no existe o es inválida.", "warning")
+            
+            flash("Inscripción cancelada y usuario eliminado exitosamente.", "success")
+            return redirect(url_for('consulta_qr'))
 
+    elif participante_evento:
+        db.session.delete(participante_evento)
+        usuario = Participantes.query.filter_by(par_id=user_id).first()
+        if usuario:
+            ruta_documento = participante_evento.par_eve_documentos
+             # Si la ruta existe, construir la ruta absoluta
+            if ruta_documento:
+                ruta_documento = os.path.join(current_app.root_path, 'static', 'uploads', ruta_documento.strip())
+            
+            # Eliminar el registro del usuario de la base de datos
+            db.session.delete(usuario)
+            db.session.commit()
+            
+            # Intentar eliminar el archivo del sistema
+            if ruta_documento and os.path.exists(ruta_documento):
+                try:
+                    os.remove(ruta_documento)
+                    flash("Archivo de soporte eliminado del sistema.", "success")
+                except Exception as e:
+                    flash(f"No se pudo eliminar el archivo de soporte: {str(e)}", "warning")
+            else:
+                flash("La ruta del archivo de soporte no existe o es inválida.", "warning")
+            
+            flash("Inscripción cancelada y usuario eliminado exitosamente.", "success")
+            return redirect(url_for('consulta_qr'))
+
+
+    else:
+        flash("No estás registrado en este evento.", "danger")
+        return redirect(url_for('consulta_qr'))
+    
+    
 
 # HU52: Editar la información de un evento 
 @app.route("/administrador/editar_evento/<int:eve_id>", methods=["GET", "POST"])

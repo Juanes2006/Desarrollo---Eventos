@@ -2,12 +2,7 @@
 <div class="container mt-4">
     <h2 class="text-center mb-4">{{ titulo if titulo else "Lista de Eventos" }}</h2>
     <div class="row">
-        {% block nav_links %}
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('lista_eventos') }}">Ver Eventos</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('buscar_eventos') }}">Buscar Eventos</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('consulta_qr') }}">Mis Inscripciones</a></li>
 
-        {% endblock %}
     </div>
 
     <div class="row">
@@ -52,5 +47,10 @@
         {% endif %}
     </div>
 </div>
+
+{% endblock %} {% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{{ url_for('lista_eventos') }}">Ver Eventos</a></li>
+<li class="nav-item"><a class="nav-link" href="{{ url_for('buscar_eventos') }}">Buscar Eventos</a></li>
+<li class="nav-item"><a class="nav-link" href="{{ url_for('consulta_qr') }}">Mis Inscripciones</a></li>
 
 {% endblock %}
