@@ -1,5 +1,5 @@
 
-from flask  import Flask, render_template, redirect, url_for, flash,request, send_file, make_response, current_app
+from flask  import Flask, render_template, redirect, url_for, flash,request, send_file, make_response, current_app, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime, date
@@ -8,6 +8,7 @@ from io import BytesIO
 import segno
 import base64
 import os
+
 
 from werkzeug.utils import secure_filename
 
@@ -18,30 +19,30 @@ app.secret_key = "clave_secreta_para_flash"
 
 
 
-# Configuración para la subida de imágenes
-UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'imagenes')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+UPLOAD_FOLDER_IMAGENES = os.path.join(app.root_path, 'static', 'imagenes')
+UPLOAD_FOLDER_PAGOS = os.path.join(app.root_path, 'static', 'uploads')  
+UPLOAD_FOLDER_PROGRAMACION = os.path.join(app.root_path, 'static', 'programacion')
 
-UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'pdf'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# Extensiones permitidas
+ALLOWED_EXTENSIONS_IMAGENES = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS_PAGOS = {'png', 'jpg', 'pdf'}
+ALLOWED_EXTENSIONS_PROGRAMACION = {'pdf'}
 
+# Configurar diferentes rutas en app.config
+app.config['UPLOAD_FOLDER_IMAGENES'] = UPLOAD_FOLDER_IMAGENES
+app.config['UPLOAD_FOLDER_PAGOS'] = UPLOAD_FOLDER_PAGOS
+app.config['UPLOAD_FOLDER_PROGRAMACION'] = UPLOAD_FOLDER_PROGRAMACION
 
+# Función para verificar extensión permitida
+def allowed_file(filename, allowed_extensions):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
-def allowed_file(filename):
-    """Verifica si el archivo tiene una extensión permitida."""
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def save_image(file):
-    """
-    Guarda la imagen en la carpeta UPLOAD_FOLDER y retorna el nombre seguro del archivo.
-    Si el archivo no es permitido, retorna None.
-    """
-    if file and allowed_file(file.filename):
+# Función para guardar archivos en la carpeta correcta
+def save_file(file, folder, allowed_extensions):
+    if file and allowed_file(file.filename, allowed_extensions):
         filename = secure_filename(file.filename)
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        os.makedirs(folder, exist_ok=True)  # Crea la carpeta si no existe
+        file.save(os.path.join(folder, filename))
         return filename
     return None
 
@@ -106,10 +107,16 @@ class Evento(db.Model):
     adm_id = db.Column(db.String(20), db.ForeignKey('administradores_evento.adm_id'))
     
     # Change from Float to String with "Sí" or "No"
-    cobro = db.Column(db.String(2), nullable=False, default="No")  
+    cobro = db.Column(db.String(2), nullable=False, default="No")
+
     cupos = db.Column(db.Integer, nullable=True)
     
     imagen = db.Column(db.String(255), nullable=True)
+     
+    ## AGREGO UN NUEVO CAMPO PARA EL ARCHIVO DE PROGRAMACION
+    # Este campo almacenará la ruta del archivo de programación
+    archivo_programacion = db.Column(db.String(255), nullable=True)  # Nuevo campo para el archivo
+
 
 
     
@@ -271,11 +278,25 @@ def crear_evento():
     
                 fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d") if fecha_inicio_str else None
                 fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d") if fecha_fin_str else None
-    
+                
                 # Procesa cobro y cupos si se envían, de lo contrario deja None
-                cobro = float(cobro_str) if cobro_str else None
+                cobro = "Sí" if cobro_str == "si" else "No"  # Guarda como "Sí" o "No"
+
                 cupos = int(cupos_str) if cupos_str else None
-    
+                
+                
+                # Guardar la imagen del evento
+                imagen = request.files.get("imagen")
+                imagen_nombre = save_file(imagen, app.config['UPLOAD_FOLDER_IMAGENES'], ALLOWED_EXTENSIONS_IMAGENES)
+
+        # Guardar comprobante de pago
+        
+
+        # Guardar archivo de programación
+                archivo_programacion = request.files.get("archivo_programacion")
+                archivo_nombre = save_file(archivo_programacion, app.config['UPLOAD_FOLDER_PROGRAMACION'], ALLOWED_EXTENSIONS_PROGRAMACION)
+
+                
                 admin_demo = AdministradorEvento.query.first()
                 if not admin_demo:
                     admin_demo = AdministradorEvento(
@@ -297,7 +318,9 @@ def crear_evento():
                     eve_estado="CREADO",
                     adm_id=admin_demo.adm_id,
                     cobro=cobro,
-                    cupos=cupos
+                    cupos=cupos,
+                    imagen=imagen_nombre,  # Guarda el nombre de la imagen
+                    archivo_programacion=archivo_nombre  # Guarda el nombre del archivo de programación
                 )
                 db.session.add(nuevo_evento)
                 db.session.commit()
@@ -305,8 +328,9 @@ def crear_evento():
                 flash(f"¡Se ha creado un nuevo evento! {nombre}")
     
                 return redirect(url_for("super_adm"))
+        categorias = Categoria.query.all()
         eventos = Evento.query.all()  # Obtiene todos los eventos creados
-        return render_template("crear_evento.html", eventos=eventos)
+        return render_template("crear_evento.html", eventos=eventos, categorias=categorias)
 
 # HU03: Acceder a información detallada sobre los eventos de mi interés
 @app.route("/evento_detalle/<int:eve_id>")
@@ -582,7 +606,18 @@ def cancelar_inscripcion(evento_id, user_id):
         flash("No estás registrado en este evento.", "danger")
         return redirect(url_for('consulta_qr'))
     
-    
+@app.route("/descargar_programacion/<int:event_id>")
+def descargar_programacion(event_id):
+    # Buscar el evento en la base de datos
+    evento = Evento.query.get_or_404(event_id)
+
+    # Verificar si el evento tiene un archivo de programación
+    if not evento.archivo_programacion:
+        flash("No hay archivo de programación disponible para este evento.", "danger")
+        return redirect(url_for("super_adm"))  # Redirige a la página de administración
+
+    # Ruta completa del archivo
+    return send_from_directory(app.config['UPLOAD_FOLDER_PROGRAMACION'], evento.archivo_programacion, as_attachment=True)
 
 # HU52: Editar la información de un evento 
 @app.route("/administrador/editar_evento/<int:eve_id>", methods=["GET", "POST"])
@@ -599,11 +634,17 @@ def editar_evento(eve_id):
         evento.eve_fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d") if fecha_fin_str else None
         evento.cobro = request.form.get("cobro")
         
-        imagen_file = request.files.get("imagen")
+        imagen_file= request.files.get("imagen")
         if imagen_file and imagen_file.filename != "":
-            imagen_filename = save_image(imagen_file)
+            imagen_filename = save_file(imagen_file)
             if imagen_filename:
                 evento.imagen = imagen_filename
+                
+        archivo_programacion_file = request.files.get("archivo_programacion")
+        if archivo_programacion_file and archivo_programacion_file.filename != "":
+            archivo_programacion_filename = save_file(archivo_programacion_file, app.config['UPLOAD_FOLDER_PROGRAMACION'], ALLOWED_EXTENSIONS_PROGRAMACION)
+            if archivo_programacion_filename:
+                evento.archivo_programacion = archivo_programacion_filename
 
         db.session.commit()
         flash("Evento editado con éxito.")

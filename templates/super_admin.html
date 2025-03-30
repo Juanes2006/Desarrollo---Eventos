@@ -1,6 +1,6 @@
 {% extends 'base.html' %} {% block nav_links %}
 <li class="nav-item"><a class="nav-link" href="{{ url_for('agregar_area') }}">Agregar Area</a></li>
-<li class="nav-item"><a class="nav-link" href="{{ url_for('agregar_categoria') }}">Aregar Categoria</a></li>
+<li class="nav-item"><a class="nav-link" href="{{ url_for('agregar_categoria') }}">Agregar Categoria</a></li>
 {% endblock %} {% block eventos_url %} {{ url_for('super_adm') }} {% endblock %} {% block eventos_text %} Super Admin {% endblock %} {% block content %}
 <div class="container mt-4">
     {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %}

@@ -51,6 +51,12 @@
         <label for="imagen" class="form-label">Imagen del Evento</label>
         <input type="file" class="form-control" name="imagen" id="imagen" accept="image/*">
     </div>
+    <div class="mb-3">
+        <label for="archivo_programacion" class="form-label">Archivo de Programación (PDF)</label>
+        <input type="file" class="form-control" name="archivo_programacion" id="archivo_programacion" accept=".pdf">
+    </div>
+
+
     <button type="submit" class="btn btn-primary">Crear</button>
 </form>
 {% endblock %} {% block nav_links %}
@@ -70,4 +76,5 @@
         {% endfor %}
     </ul>
 </li>
+
 {% endblock %}

@@ -24,7 +24,6 @@
                     {{ evento.eve_estado }}
                 </span>
             </p>
-
             {% if evento.cobro is not none %}
             <p><strong>💲Cobro de Boleteria
                 :</strong> <span class="badge bg-warning text-dark ">{{ evento.cobro }}</span></p>
@@ -51,7 +50,12 @@
             </table>
             {% endif %}
 
-            <hr>
+            <hr> {% if evento.archivo_programacion %}
+            <a href="{{ url_for('descargar_programacion', event_id=evento.eve_id) }}" class="btn btn-success">
+                📄 Descargar Archivo de Programación
+            </a> {% else %}
+            <p>No hay archivo de programación disponible.</p>
+            {% endif %}
 
             <h4 class="mt-4 ">⭐ Características del Evento</h4>
             <table class="table table-bordered table-hover mt-2 ">

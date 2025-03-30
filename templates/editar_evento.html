@@ -30,6 +30,11 @@
         <input type="file" class="form-control" name="imagen" id="imagen" accept="image/*"> {% if evento.imagen %}
         <small class="text-muted">Imagen actual: {{ evento.imagen }}</small> {% endif %}
     </div>
+    <div class="mb-3">
+        <label for="archivo_programacion" class="form-label">Actualizar Programación (PDF(opcional))</label>
+        <input type="file" class="form-control" name="archivo_programacion" id="archivo_programacion" accept=".pdf">{% if evento.archivo_programacion %}
+        <small class="text-muted">Programacion actual: {{ evento.archivo_programacion }}</small> {% endif %}
+    </div>
     <button type="submit" class="btn btn-success">Guardar Cambios</button>
 </form>
 {% endblock %} {% block nav_links %}
