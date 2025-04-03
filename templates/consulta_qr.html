@@ -1,4 +1,4 @@
-{% extends 'base.html' %} {% block eventos_url %}{{ url_for('consulta_qr') }}{% endblock %} {% block eventos_text %}Consultar Código QR{% endblock %} {% block content %}
+{% extends 'base.html' %} {% block eventos_url %}{{ url_for('lista_eventos') }}{% endblock %} {% block eventos_text %}Consultar Código QR{% endblock %} {% block content %}
 <div class="container mt-5">
     <h2>Consultar tu Código QR</h2>
     {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
@@ -21,4 +21,10 @@
         <button type="submit" class="btn btn-primary">Consultar QR</button>
     </form>
 </div>
-{% endblock %}
+{% endblock %} {% block nav_links %}
+
+<li class="nav-item">
+    <a class="nav-link" href="{{ url_for('verificar_participante') }}">
+        Modificar Datos (Participante)
+    </a>
+</li>{% endblock %}

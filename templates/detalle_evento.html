@@ -7,10 +7,10 @@
         <div class="card-body text-center">
             <h3 class="text-primary">{{ evento.eve_nombre }}</h3>
             {% if evento.imagen %}
-            <img src="{{ url_for('static', filename='imagenes/' ~ evento.imagen) }}" class="card-img-top rounded img-fluid" alt="Imagen del evento" style="object-fit: cover; max-width: 100%; height: auto;"> {% else %}
+            <img src="{{ url_for('static', filename='imagenes/' ~ evento.imagen) }}" class="card-img-top rounded img-fluid" alt="Imagen del evento" style="object-fit: contain; max-width: 100%; max-height: 400px;"> {% else %}
             <p>No hay imagen disponible para este evento.</p>
-            {% endif %}
-            <p class="text-muted ">{{ evento.eve_descripcion }}</p>
+            {% endif %} <br><br>
+            <h6 class="text-muted ">{{ evento.eve_descripcion }}</h6>
 
             <hr>
 
@@ -62,7 +62,9 @@
                 <thead class="table-dark ">
                     <tr>
                         <th>🔹 Parámetro</th>
+                        {% if evento.cobro is not none %}
                         <th>🔸 Valor</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>

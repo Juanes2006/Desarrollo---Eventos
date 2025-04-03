@@ -14,6 +14,9 @@
         <thead class="table-dark">
             <tr>
                 <th>📅 Nombre del Evento</th>
+                <th></th>
+
+
                 <th class="text-center">⚙️ Acciones</th>
             </tr>
         </thead>
@@ -22,9 +25,15 @@
             <tr>
                 <td class="align-middle">{{ evento.eve_nombre }}</td>
                 <td class="text-center">
-                    <a class="btn btn-warning btn-sm" href="{{ url_for('editar_evento', eve_id=evento.eve_id) }}">
+                    <td class="text-center">
+                        <a class="btn btn-warning btn-sm" href="{{ url_for('editar_evento', eve_id=evento.eve_id) }}">
                             ✏️ Editar
                         </a>
+                        <a class="btn btn-primary btn-sm" href="{{ url_for('gestionar_inscripciones', eve_id=evento.eve_id) }}">
+                            👥 Gestionar Inscripciones
+                        </a>
+                    </td>
+
                 </td>
 
             </tr>

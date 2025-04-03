@@ -9,18 +9,22 @@
     <h3>Tu Código QR</h3>
     <img src="data:image/png;base64,{{ qr_image }}" alt="Código QR" class="img-fluid" style="max-width:300px;">
     <br><br>
-    <a href="{{ url_for('descargar_qr', event_id=evento.eve_id, user_id=user_id) }}" class="btn btn-success">Descargar QR</a>
-    <br><br> {% if evento.archivo_programacion %}
+    <div class="d-flex gap-3">
+        <a href="{{ url_for('descargar_qr', event_id=evento.eve_id, user_id=user_id) }}" class="btn btn-success">Descargar QR</a>
+
+        <form action="{{ url_for('cancelar_inscripcion', evento_id=evento.eve_id, user_id=user_id) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas cancelar la inscripción?');">
+            {% if form is defined %} {{ form.hidden_tag() }} {% endif %}
+            <button type="submit" class="btn btn-danger">Cancelar Inscripción</button>
+        </form>
+    </div>
+    <br> {% if evento.archivo_programacion %}
     <a href="{{ url_for('descargar_programacion', event_id=evento.eve_id) }}" class="btn btn-success">
         📄 Descargar Archivo de Programación
     </a> {% else %}
     <p>No hay archivo de programación disponible.</p>
     {% endif %}
-    <br><br>
-    <form action="{{ url_for('cancelar_inscripcion', evento_id=evento.eve_id, user_id=user_id) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas cancelar la inscripción?');">
-        {% if form is defined %} {{ form.hidden_tag() }} {% endif %}
-        <button type="submit" class="btn btn-danger">Cancelar Inscripción</button>
-    </form>
+
+
 
 </div>
 {% endblock %} {% block nav_links %}

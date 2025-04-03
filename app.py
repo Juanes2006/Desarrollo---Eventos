@@ -8,7 +8,7 @@ from io import BytesIO
 import segno
 import base64
 import os
-
+from sqlalchemy.dialects.mysql import ENUM
 
 from werkzeug.utils import secure_filename
 
@@ -22,6 +22,7 @@ app.secret_key = "clave_secreta_para_flash"
 UPLOAD_FOLDER_IMAGENES = os.path.join(app.root_path, 'static', 'imagenes')
 UPLOAD_FOLDER_PAGOS = os.path.join(app.root_path, 'static', 'uploads')  
 UPLOAD_FOLDER_PROGRAMACION = os.path.join(app.root_path, 'static', 'programacion')
+UPLOAD_FOLDER = UPLOAD_FOLDER_PAGOS  # Default upload folder
 
 # Extensiones permitidas
 ALLOWED_EXTENSIONS_IMAGENES = {'png', 'jpg', 'jpeg', 'gif'}
@@ -30,7 +31,8 @@ ALLOWED_EXTENSIONS_PROGRAMACION = {'pdf'}
 
 # Configurar diferentes rutas en app.config
 app.config['UPLOAD_FOLDER_IMAGENES'] = UPLOAD_FOLDER_IMAGENES
-app.config['UPLOAD_FOLDER_PAGOS'] = UPLOAD_FOLDER_PAGOS
+app.config['UPLOAD_FOLDER_PROGRAMACION'] = UPLOAD_FOLDER_PROGRAMACION
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER  # Add default upload folder to config
 app.config['UPLOAD_FOLDER_PROGRAMACION'] = UPLOAD_FOLDER_PROGRAMACION
 
 # Función para verificar extensión permitida
@@ -154,15 +156,19 @@ class AsistentesEventos(db.Model):
 
 
 # Tabla: PARTICIPANTES
+
+
 class Participantes(db.Model):
     __tablename__ = 'participantes'
     par_id = db.Column(db.String(20), primary_key=True)
     par_nombre = db.Column(db.String(100))
     par_correo = db.Column(db.String(100))
     par_telefono = db.Column(db.String(45))
-
+    par_estado = db.Column(ENUM('PENDIENTE', 'ACEPTADO', 'RECHAZADO'), nullable=False, default='PENDIENTE')
+    
     # Relación uno a muchos con ParticipantesEventos
     participantes_eventos = db.relationship('ParticipantesEventos', backref='participante', lazy=True)
+
 
 
 # Tabla: PARTICIPANTES_EVENTOS
@@ -441,18 +447,29 @@ def registrarme_evento(evento_id):
 # Ejemplo de ruta que obtiene los eventos de la BD
 @app.route('/consulta_qr', methods=['GET', 'POST'])
 def consulta_qr():
-    # Obtener todos los eventos de la base de datos
     events = Evento.query.all()
-    
+
     if request.method == 'POST':
         event_id = request.form.get('event_id')
         user_id = request.form.get('user_id')
+
         if not event_id or not user_id:
             flash("Debes seleccionar un evento y escribir tu documento.", "warning")
             return redirect(url_for('consulta_qr'))
+
+        # Intentar buscar el usuario en ambas tablas (Asistentes y Participantes)
+        usuario = Asistentes.query.get(user_id) or Participantes.query.get(user_id)
+        tipo = 'asistente' if Asistentes.query.get(user_id) else 'participante' if Participantes.query.get(user_id) else None
+
+        if usuario:
+            flash("Usuario encontrado", "success")
+        else:
+            flash("Usuario no encontrado", "danger")
+
         return redirect(url_for('mostrar_qr', event_id=event_id, user_id=user_id))
-    
+
     return render_template('consulta_qr.html', events=events)
+
 
 # Ruta para mostrar el QR y los detalles del evento seleccionado
 @app.route('/mostrar_qr/<int:event_id>/<string:user_id>')
@@ -618,6 +635,83 @@ def descargar_programacion(event_id):
 
     # Ruta completa del archivo
     return send_from_directory(app.config['UPLOAD_FOLDER_PROGRAMACION'], evento.archivo_programacion, as_attachment=True)
+############ FUNCION PARA VER SI ES UN PARTICIPANTE
+@app.route('/verificar_participante', methods=['GET', 'POST'])
+def verificar_participante():
+    if request.method == 'POST':
+        par_id = request.form.get('par_id')
+
+        if not par_id:
+            flash("Por favor, ingresa tu ID de participante.", "warning")
+            return redirect(url_for('verificar_participante'))
+
+        participante = Participantes.query.get(par_id)
+
+        if not participante:
+            flash("No se encontró un participante con este ID.", "danger")
+            return redirect(url_for('verificar_participante'))
+
+        # Si el participante existe, lo enviamos a la vista de modificación
+        return redirect(url_for('modificar_participante', user_id=par_id))
+
+    return render_template('verificar_participante.html')
+
+
+#########  HU15: Modificar la información de un participante
+@app.route('/modificar_participante/<string:user_id>', methods=['GET', 'POST'])
+def modificar_participante(user_id):
+    participante = Participantes.query.get(user_id)
+    
+    if not participante:
+        flash("Participante no encontrado", "danger")
+        return redirect(url_for('consulta_qr'))  # Redirige a la consulta QR si no se encuentra el participante
+
+    if request.method == 'POST':
+        participante.par_nombre = request.form['nombre']
+        participante.par_correo = request.form['correo']
+        participante.par_telefono = request.form['telefono']
+
+        # Si se sube un nuevo documento, lo guardamos
+        if 'documento' in request.files:
+            file = request.files['documento']
+            if file.filename != '':
+                filename = save_file(file, app.config['UPLOAD_FOLDER_PAGOS'], ALLOWED_EXTENSIONS_PAGOS)
+                if filename:
+                    participante.par_eve_documentos = filename
+
+        db.session.commit()
+        flash("Información actualizada con éxito", "success")
+        return redirect(url_for('consulta_qr'))  # Redirige tras modificar
+
+    return render_template('modificar_participante.html', participante=participante)
+
+
+#### HU 16 @app.route('/admin/gestionar_inscripciones/<int:eve_id>', methods=['GET', 'POST'])
+@app.route('/admin/gestionar_inscripciones/<int:eve_id>')
+def gestionar_inscripciones(eve_id):
+    evento = Evento.query.get_or_404(eve_id)
+
+    # Consulta usando la tabla intermedia ParticipantesEventos
+    participantes = db.session.query(Participantes).join(ParticipantesEventos).filter(ParticipantesEventos.par_eve_evento_fk == eve_id).all()
+
+    return render_template("gestionar_inscripciones.html", evento=evento, participantes=participantes)
+
+####### FUNCION ADICIONAL PARA ACTUALIZAR EL ESTADO DE LOS PARTICIPANTES
+@app.route('/admin/actualizar_estado', methods=['POST'])
+def actualizar_estado():
+    par_id = request.form.get('par_id')
+    nuevo_estado = request.form.get('estado')
+
+    participante = Participantes.query.get(par_id)
+    if participante:
+        participante.par_estado = nuevo_estado
+        db.session.commit()
+        
+        flash(f"El estado de {participante.par_nombre} ha sido actualizado a {nuevo_estado}.", "success")
+        return redirect(url_for("lista_eventos"))  # Redirige a la lista de eventos o a donde desees
+
+    return redirect(request.referrer)
+
 
 # HU52: Editar la información de un evento 
 @app.route("/administrador/editar_evento/<int:eve_id>", methods=["GET", "POST"])

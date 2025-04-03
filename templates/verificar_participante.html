@@ -1,0 +1,19 @@
+{% extends 'base.html' %}{% block eventos_url %}{{ url_for('consulta_qr') }}{% endblock %} {% block eventos_text %}Verificar Participante{% endblock %} {% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Verificar Identidad</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %} {% endif %} {% endwith %}
+
+    <form method="POST">
+        <div class="mb-3">
+            <label for="par_id" class="form-label">Ingrese su ID de Participante</label>
+            <input type="text" class="form-control" id="par_id" name="par_id" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Continuar</button>
+        <a href="{{ url_for('consulta_qr') }}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}
