@@ -10,45 +10,47 @@
     <h1 class="text-center">📌 Panel de Administración</h1>
     <p class="text-muted text-center">Aquí puedes seleccionar y editar los eventos existentes:</p>
 
-    <table class="table table-striped table-hover shadow-sm mt-3">
-        <thead class="table-dark">
-            <tr>
-                <th>📅 Nombre del Evento</th>
-                <th></th>
-
-
-                <th class="text-center">⚙️ Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% if eventos %} {% for evento in eventos %}
-            <tr>
-                <td class="align-middle">{{ evento.eve_nombre }}</td>
-                <td class="text-center">
+    <!-- Tabla Responsiva -->
+    <div class="table-responsive">
+        <table class="table table-striped table-hover shadow-sm mt-3">
+            <thead class="table-dark">
+                <tr>
+                    <th>📅 Nombre del Evento</th>
+                    <th class="text-center">⚙️ Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if eventos %} {% for evento in eventos %}
+                <tr>
+                    <td class="align-middle">{{ evento.eve_nombre }}</td>
                     <td class="text-center">
-                        <a class="btn btn-warning btn-sm" href="{{ url_for('editar_evento', eve_id=evento.eve_id) }}">
-                            ✏️ Editar
-                        </a>
-                        <a class="btn btn-primary btn-sm" href="{{ url_for('gestionar_inscripciones', eve_id=evento.eve_id) }}">
-                            👥 Gestionar Inscripciones
-                        </a>
+                        <div class="d-flex flex-column flex-md-row gap-2">
+                            <a class="btn btn-warning btn-sm" href="{{ url_for('editar_evento', eve_id=evento.eve_id) }}">
+                                    ✏️ Editar
+                                </a>
+                            <a class="btn btn-primary btn-sm" href="{{ url_for('gestionar_inscripciones', eve_id=evento.eve_id) }}">
+                                    👥 Gestionar Participantes
+                                </a>
+                            <a class="btn btn-secondary btn-sm" href="{{ url_for('gestionar_inscripciones', eve_id=evento.eve_id) }}">
+                                    👥 Gestionar Asistentes
+                                </a>
+                        </div>
                     </td>
+                </tr>
+                {% endfor %} {% else %}
+                <tr>
+                    <td colspan="2" class="text-center text-muted py-3">
+                        🚀 No hay eventos creados.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
 
-                </td>
-
-            </tr>
-            {% endfor %} {% else %}
-            <tr>
-                <td colspan="2" class="text-center text-muted py-3">
-                    🚀 No hay eventos creados.
-                </td>
-            </tr>
-            {% endif %}
-        </tbody>
-    </table>
-
+    <!-- Botón Crear Evento  SOLO SE VE EN LOS MOVILES GRACIAS AL TIPO DE CLASE -->
     <div class="text-center mb-4 d-md-none">
-        <a class="btn btn-success btn-sm" style="width: 100%; max-width: 200px;" href="{{ url_for('crear_evento') }}">
+        <a class="btn btn-success btn-sm w-100" href="{{ url_for('crear_evento') }}">
             ➕ Crear Evento
         </a>
     </div>

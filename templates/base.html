@@ -50,6 +50,30 @@
             }
         }, 5000);
     </script>
+    <script>
+        window.setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(function(alert) {
+                alert.style.transition = "opacity 0.5s ease";
+                alert.style.opacity = 0;
+                setTimeout(function() {
+                    alert.remove();
+                }, 500); // tiempo en que se oculta
+            });
+        }, 5000);
+    </script>
+    <script>
+        function copiarClave() {
+            var clave = document.getElementById('claveEvento').innerText;
+
+            navigator.clipboard.writeText(clave).then(function() {
+                alert("Clave copiada al portapapeles: " + clave);
+            }).catch(function(err) {
+                console.error("Error al copiar la clave: ", err);
+            });
+        }
+    </script>
+
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

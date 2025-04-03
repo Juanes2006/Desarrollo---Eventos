@@ -1,6 +1,7 @@
 
-from flask  import Flask, render_template, redirect, url_for, flash,request, send_file, make_response, current_app, send_from_directory
+from flask   import Flask, render_template, redirect, url_for, flash,request, send_file, make_response, current_app, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
+from markupsafe import Markup
 from flask_migrate import Migrate
 from datetime import datetime, date
 from sqlalchemy.orm import joinedload
@@ -703,14 +704,35 @@ def actualizar_estado():
     nuevo_estado = request.form.get('estado')
 
     participante = Participantes.query.get(par_id)
+
     if participante:
         participante.par_estado = nuevo_estado
         db.session.commit()
+
+       
+        participante_evento = ParticipantesEventos.query.filter_by(par_eve_participante_fk=par_id).first()
+        clave_evento = participante_evento.par_eve_clave if participante_evento else "No asignada"
+
+        if nuevo_estado == "ACEPTADO":
+            mensaje = Markup(f"""
+                El participante {participante.par_nombre} ha sido aceptado, su clave de acceso es: 
+                <strong id='claveEvento'>{clave_evento}</strong>
+                <button class="btn btn-sm btn-outline-primary ml-2" onclick="copiarClave()">📋 Copiar Clave</button>
+            """)
+            flash(mensaje, "success")    
+        elif nuevo_estado == "RECHAZADO":
+            flash(f"El participante {participante.par_nombre} ha sido rechazado.", "danger")
         
-        flash(f"El estado de {participante.par_nombre} ha sido actualizado a {nuevo_estado}.", "success")
-        return redirect(url_for("lista_eventos"))  # Redirige a la lista de eventos o a donde desees
+        elif nuevo_estado == "PENDIENTE":
+            flash(f"El participante {participante.par_nombre} ha sido puesto en estado pendiente.", "warning")
+        
+        else:
+            flash(f"El estado de {participante.par_nombre} ha sido actualizado a {nuevo_estado}.", "success")
+
+        return redirect(url_for("lista_eventos"))
 
     return redirect(request.referrer)
+
 
 
 # HU52: Editar la información de un evento 
@@ -764,18 +786,19 @@ def ver_evento_superadmin(eve_id):
 @app.route("/activar_evento/<int:eve_id>", methods=["POST"])
 def activar_evento(eve_id):
     evento = Evento.query.get_or_404(eve_id)
-    
-    if evento.eve_estado == "CREADO":
-        evento.eve_estado = "ACTIVO"
-        db.session.commit()
-        flash("El evento ha sido activado correctamente.", "success")
-    else:
-        flash("El evento ya está activo o en otro estado.", "warning")
-
+    evento.eve_estado = "ACTIVO"
+    db.session.commit()
+    flash(f"Evento {evento.eve_nombre} activado exitosamente.", "success")
     return redirect(url_for("eventos_superadmin"))
 
 
-
+@app.route("/desactivar_evento/<int:eve_id>", methods=["POST"])
+def desactivar_evento(eve_id):
+    evento = Evento.query.get_or_404(eve_id)
+    evento.eve_estado = "INACTIVO"
+    db.session.commit()
+    flash(f"Evento {evento.eve_nombre} desactivado exitosamente.", "success")
+    return redirect(url_for("eventos_superadmin"))  
 
 
 

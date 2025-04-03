@@ -29,11 +29,23 @@
                 </span>
             </p>
 
-            {% if evento.eve_estado == "CREADO" %}
+            {% if evento.eve_estado == "CREADO"%}
+            <form action="{{ url_for('activar_evento', eve_id=evento.eve_id) }}" method="POST">
+                <button type="submit" class="btn btn-success mt-3">✅ Activar Evento</button>
+            </form>
+            {% endif %} {% if evento.eve_estado == "ACTIVO" %}
+            <form action="{{ url_for('desactivar_evento', eve_id=evento.eve_id) }}" method="POST">
+                <button type="submit" class="btn btn-danger mt-3">❌ Desactivar Evento</button>
+            </form>
+            {% endif %} {% if evento.eve_estado == "INACTIVO" %}
             <form action="{{ url_for('activar_evento', eve_id=evento.eve_id) }}" method="POST">
                 <button type="submit" class="btn btn-success mt-3">✅ Activar Evento</button>
             </form>
             {% endif %}
+
+
+
+
 
             <div class="text-center mt-4">
                 <a href="{{ url_for('eventos_superadmin') }}" class="btn btn-secondary">Volver</a>
