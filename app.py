@@ -925,6 +925,7 @@ def mi_info():
                            participante=participante, 
                            eventos_inscritos=eventos_inscritos)
 
+
 # PUNTO DE ENTRADA
 if __name__ == "__main__":
     app.run(debug=True)

@@ -49,7 +49,7 @@
     <!-- Sección para Asistente -->
     <fieldset id="form_asistente" class="border rounded p-3 mb-3" style="display: none;">
         <legend class="float-none w-auto px-2">Registro como Asistente</legend>
-        {% if evento.cobro == 'SI' %}
+        {% if evento.cobro|lower == 'sí' or evento.cobro|lower == 'si' %}
         <div class="mb-3">
             <label for="soporte_pago" class="form-label">Adjuntar soporte de pago:</label>
             <input type="file" name="soporte_pago" id="soporte_pago" class="form-control">
@@ -58,6 +58,7 @@
         {% else %}
         <p>El evento no requiere soporte de pago.</p>
         {% endif %}
+
     </fieldset>
 
     <!-- Sección para Participante -->
