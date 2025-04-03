@@ -2,7 +2,7 @@
 <div class="container mt-4">
     <h2 class="text-center">👥 Gestión de Inscripciones para {{ evento.eve_nombre }}</h2>
 
-    <!-- Hacemos la tabla responsiva -->
+    <!-- Tabla Responsiva -->
     <div class="table-responsive">
         <table class="table table-striped table-hover shadow-sm mt-3">
             <thead class="table-dark">
@@ -22,14 +22,18 @@
                     <td>{{ participante.par_correo }}</td>
                     <td>
                         {% if participante.par_estado == 'PENDIENTE' %}
-                        <span class="badge bg-warning">⏳ Pendiente</span> {% elif participante.par_estado == 'ACEPTADO' %}
-                        <span class="badge bg-success">✅ Aceptado</span> {% else %}
-                        <span class="badge bg-danger">❌ Rechazado</span> {% endif %}
+                        <span class="badge bg-warning text-dark">⏳ Pendiente</span> {% elif participante.par_estado == 'ACEPTADO' %}
+                        <span class="badge bg-success">✅ Aceptado</span> {% elif participante.par_estado == 'RECHAZADO' %}
+                        <span class="badge bg-danger">❌ Rechazado</span> {% else %}
+                        <span class="badge bg-secondary">🔍 Desconocido</span> {% endif %}
                     </td>
                     <td class="text-center">
                         <form action="{{ url_for('actualizar_estado') }}" method="POST">
                             <input type="hidden" name="par_id" value="{{ participante.par_id }}">
-                            <div class="d-flex flex-column flex-md-row gap-2">
+                            <input type="hidden" name="evento_id" value="{{ evento.eve_id }}">
+
+                            <!-- Botones responsivos -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
                                 <button type="submit" name="estado" value="ACEPTADO" class="btn btn-success btn-sm">
                                         ✅ Aceptar
                                     </button>

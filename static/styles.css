@@ -1,3 +1,5 @@
+/* 🌟 Paleta de colores */
+
 :root {
     --primary-color: #FF6F00;
     /* Naranja principal */
@@ -14,7 +16,7 @@
 }
 
 
-/* 🌎 Estilo global */
+/* 🌍 Estilo global */
 
 body {
     background-color: var(--background-light);
@@ -25,7 +27,29 @@ body {
 }
 
 
-/* 🔝 Navbar */
+/* 📚 Encabezado personalizado */
+
+.custom-header .container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo {
+    width: 60px;
+    height: auto;
+    margin-right: 15px;
+}
+
+.header-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--light-color);
+    margin: 0;
+}
+
+
+/* 💙 Navbar */
 
 .navbar {
     background-color: var(--primary-color) !important;
@@ -53,7 +77,7 @@ body {
 }
 
 
-/* 📦 Contenedor principal */
+/* 🛋 Contenedor principal */
 
 .container {
     background-color: var(--light-color);
@@ -74,7 +98,7 @@ body {
 }
 
 
-/* 🆕 Tarjetas de contenido */
+/* 🏠 Tarjetas de contenido */
 
 .card {
     background-color: var(--light-color);
@@ -90,7 +114,7 @@ body {
 }
 
 
-/* 🔘 Botones */
+/* 🔐 Botones */
 
 .btn-custom {
     background-color: var(--primary-color);
@@ -108,9 +132,6 @@ body {
     background-color: var(--hover-color);
     transform: translateY(-2px);
 }
-
-
-/* 📱 Adaptación responsiva */
 
 
 /* Para pantallas medianas y menores a 768px */
@@ -161,5 +182,48 @@ body {
     }
     .container {
         padding: 15px;
+    }
+}
+
+
+/* Ajusta el logo en la navbar */
+
+.logo {
+    height: 80px;
+    width: 80px;
+    /* Tamaño del logo */
+    margin-right: 10px;
+    /* Espacio entre el logo y el texto */
+}
+
+
+/* Asegura que el logo y el texto estén alineados */
+
+.navbar .container-fluid {
+    display: flex;
+    align-items: center;
+}
+
+
+/* Mejora el diseño de la navbar en pantallas pequeñas */
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    font-size: 1.2rem;
+    /* Tamaño del texto */
+}
+
+
+/* Para móviles: centra el logo */
+
+@media (max-width: 768px) {
+    .navbar .container-fluid {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+    .logo {
+        height: 40px;
+        /* Ajusta el tamaño en móviles */
     }
 }

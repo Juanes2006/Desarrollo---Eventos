@@ -165,7 +165,6 @@ class Participantes(db.Model):
     par_nombre = db.Column(db.String(100))
     par_correo = db.Column(db.String(100))
     par_telefono = db.Column(db.String(45))
-    par_estado = db.Column(ENUM('PENDIENTE', 'ACEPTADO', 'RECHAZADO'), nullable=False, default='PENDIENTE')
     
     # Relación uno a muchos con ParticipantesEventos
     participantes_eventos = db.relationship('ParticipantesEventos', backref='participante', lazy=True)
@@ -182,7 +181,9 @@ class ParticipantesEventos(db.Model):
     par_eve_fecha_hora = db.Column(db.DateTime)
     par_eve_documentos = db.Column(db.String(255), nullable=True)
     par_eve_or = db.Column(db.String(255), nullable=True)
-    par_eve_clave = db.Column(db.String(45))         
+    par_eve_clave = db.Column(db.String(45))
+    par_estado = db.Column(ENUM('PENDIENTE', 'ACEPTADO', 'RECHAZADO'), nullable=False, default='PENDIENTE')
+   
 
    
 # CREAR LAS TABLAS
@@ -475,11 +476,12 @@ def consulta_qr():
 # Ruta para mostrar el QR y los detalles del evento seleccionado
 @app.route('/mostrar_qr/<int:event_id>/<string:user_id>')
 def mostrar_qr(event_id, user_id):
-    # Verificar inscripción en Asistentes o Participantes (lógica ya definida)
+    # Verificar si el usuario es asistente o participante
     asistente_evento = AsistentesEventos.query.filter_by(
         asi_eve_asistente_fk=user_id,
         asi_eve_evento_fk=event_id
     ).first()
+    
     participante_evento = None
     if not asistente_evento:
         participante_evento = ParticipantesEventos.query.filter_by(
@@ -487,11 +489,22 @@ def mostrar_qr(event_id, user_id):
             par_eve_evento_fk=event_id
         ).first()
     
+    # Si no es ni asistente ni participante, redirigir
     if not asistente_evento and not participante_evento:
         flash("No estás registrado como Asistente ni Participante en este evento.", "danger")
         return redirect(url_for('consulta_qr'))
     
-    # Preparar datos para el QR
+    # ✅ Verificar si el participante fue aceptado
+    if participante_evento and participante_evento.par_estado != "ACEPTADO":
+        flash("Tu inscripción aún no ha sido aceptada. No puedes obtener el QR.", "danger")
+        return redirect(url_for('consulta_qr'))
+
+    # ✅ Verificar si el asistente fue aceptado (si aplica)
+    if asistente_evento and asistente_evento.asi_eve_estado != "ACEPTADO":
+        flash("Tu asistencia aún no ha sido confirmada. No puedes obtener el QR.", "danger")
+        return redirect(url_for('consulta_qr'))
+
+    # Determinar el tipo de usuario
     if asistente_evento:
         qr_data = f"Tipo=Asistente|ID={user_id}|Evento={event_id}|Clave={asistente_evento.asi_eve_clave}"
         registration_type = "Asistente"
@@ -508,7 +521,7 @@ def mostrar_qr(event_id, user_id):
     qr_bytes = buffer.getvalue()
     qr_b64 = base64.b64encode(qr_bytes).decode('utf-8')
     
-    # Obtener el evento real desde la base de datos
+    # Obtener el evento
     evento = Evento.query.get(event_id)
     if not evento:
         flash("El evento no fue encontrado.", "danger")
@@ -522,6 +535,8 @@ def mostrar_qr(event_id, user_id):
         user_document=user_document,
         user_id=user_id
     )
+
+    
 
 # Ruta para descargar el QR (opcional)
 @app.route('/descargar_qr/<int:event_id>/<string:user_id>')
@@ -549,6 +564,8 @@ def descargar_qr(event_id, user_id):
     qr.save(buffer, kind='png', scale=5)
     buffer.seek(0)
     return send_file(buffer, mimetype='image/png', as_attachment=True, download_name='qr_code.png')
+
+
 
 
 #HU10: CANCELAR INSCRIPCIÓN A UN EVENTO
@@ -687,50 +704,75 @@ def modificar_participante(user_id):
     return render_template('modificar_participante.html', participante=participante)
 
 
-#### HU 16 @app.route('/admin/gestionar_inscripciones/<int:eve_id>', methods=['GET', 'POST'])
 @app.route('/admin/gestionar_inscripciones/<int:eve_id>')
 def gestionar_inscripciones(eve_id):
     evento = Evento.query.get_or_404(eve_id)
-
-    # Consulta usando la tabla intermedia ParticipantesEventos
-    participantes = db.session.query(Participantes).join(ParticipantesEventos).filter(ParticipantesEventos.par_eve_evento_fk == eve_id).all()
+    participantes = db.session.query(
+        Participantes.par_id,
+        Participantes.par_nombre,
+        Participantes.par_correo,
+        ParticipantesEventos.par_estado
+    ).join(ParticipantesEventos, Participantes.par_id == ParticipantesEventos.par_eve_participante_fk)\
+    .filter(ParticipantesEventos.par_eve_evento_fk == eve_id).all()
 
     return render_template("gestionar_inscripciones.html", evento=evento, participantes=participantes)
+
 
 ####### FUNCION ADICIONAL PARA ACTUALIZAR EL ESTADO DE LOS PARTICIPANTES
 @app.route('/admin/actualizar_estado', methods=['POST'])
 def actualizar_estado():
     par_id = request.form.get('par_id')
+    evento_id = request.form.get('evento_id')
     nuevo_estado = request.form.get('estado')
 
-    participante = Participantes.query.get(par_id)
+    # Validar que se enviaron los datos necesarios
+    if not par_id or not evento_id:
+        flash("Error: Faltan datos para actualizar el estado.", "danger")
+        return redirect(request.referrer)
 
-    if participante:
-        participante.par_estado = nuevo_estado
+    # Buscar al participante en la tabla ParticipantesEventos para ese evento específico
+    participante_evento = ParticipantesEventos.query.filter_by(
+        par_eve_participante_fk=par_id,
+        par_eve_evento_fk=evento_id
+    ).first()
+
+    if participante_evento:
+        participante_evento.par_estado = nuevo_estado  # ✅ Asegúrate de que la columna correcta es 'par_estado'
         db.session.commit()
 
-       
-        participante_evento = ParticipantesEventos.query.filter_by(par_eve_participante_fk=par_id).first()
-        clave_evento = participante_evento.par_eve_clave if participante_evento else "No asignada"
+        # Obtener la clave del evento si existe
+        clave_evento = participante_evento.par_eve_clave if participante_evento.par_eve_clave else "No asignada"
 
+        # Obtener el nombre del participante
+        participante = Participantes.query.get(par_id)
+        nombre_participante = participante.par_nombre if participante else "Participante"
+
+        # Mensajes de notificación según el estado
         if nuevo_estado == "ACEPTADO":
             mensaje = Markup(f"""
-                El participante {participante.par_nombre} ha sido aceptado, su clave de acceso es: 
+                El participante {nombre_participante} ha sido aceptado, su clave de acceso es: 
                 <strong id='claveEvento'>{clave_evento}</strong>
                 <button class="btn btn-sm btn-outline-primary ml-2" onclick="copiarClave()">📋 Copiar Clave</button>
             """)
-            flash(mensaje, "success")    
+            flash(mensaje, "success")
+            return redirect(url_for("lista_eventos", eve_id=evento_id))  # Redirige a la gestión del evento
+   
         elif nuevo_estado == "RECHAZADO":
-            flash(f"El participante {participante.par_nombre} ha sido rechazado.", "danger")
-        
+            flash(f"El participante {nombre_participante} ha sido rechazado.", "danger")
+            return redirect(url_for("lista_eventos", eve_id=evento_id))  # Redirige a la gestión del evento
+
         elif nuevo_estado == "PENDIENTE":
-            flash(f"El participante {participante.par_nombre} ha sido puesto en estado pendiente.", "warning")
-        
+            flash(f"El participante {nombre_participante} ha sido puesto en estado pendiente.", "warning")
+            return redirect(url_for("lista_eventos", eve_id=evento_id))  # Redirige a la gestión del evento
+
         else:
-            flash(f"El estado de {participante.par_nombre} ha sido actualizado a {nuevo_estado}.", "success")
+            flash(f"El estado de {nombre_participante} ha sido actualizado a {nuevo_estado}.", "success")
+            return redirect(url_for("lista_eventos", eve_id=evento_id))  # Redirige a la gestión del evento
 
-        return redirect(url_for("lista_eventos"))
 
+        return redirect(url_for("gestionar_inscripciones", eve_id=evento_id))  # Redirige a la gestión del evento
+
+    flash("No se encontró la inscripción de este participante en el evento.", "danger")
     return redirect(request.referrer)
 
 
@@ -852,7 +894,36 @@ def lista_eventos():
     return render_template("lista_eventos.html", titulo="Eventos Activos", eventos=eventos)
 
 
+@app.route("/participante/mi_info", methods=["GET", "POST"])
+def mi_info():
+    participante = None
+    eventos_inscritos = []
 
+    if request.method == "POST":
+        par_id = request.form.get("par_id")
+
+        if par_id:
+            # Obtener la información básica del participante
+            participante = Participantes.query.filter_by(par_id=par_id).first()
+            
+            if participante:
+                # Obtener los eventos en los que está inscrito y que estén activos
+                eventos_inscritos = db.session.query(
+                    Evento.eve_nombre,
+                    Evento.eve_fecha_inicio,
+                    Evento.eve_ciudad,
+                    ParticipantesEventos.par_estado,
+                    ParticipantesEventos.par_eve_documentos
+                ).join(ParticipantesEventos, Evento.eve_id == ParticipantesEventos.par_eve_evento_fk)\
+                 .filter(ParticipantesEventos.par_eve_participante_fk == par_id, Evento.eve_estado == "ACTIVO")\
+                 .all()
+            else:
+                flash("No se encontró información para el ID proporcionado.", "danger")
+
+    return render_template("par_informacion.html", 
+                           titulo="Mis Eventos Inscritos", 
+                           participante=participante, 
+                           eventos_inscritos=eventos_inscritos)
 
 # PUNTO DE ENTRADA
 if __name__ == "__main__":
