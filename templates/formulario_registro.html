@@ -8,10 +8,14 @@
     <div class="mb-3">
         <label for="tipo_inscripcion" class="form-label">Elige tu modalidad:</label>
         <select name="tipo_inscripcion" id="tipo_inscripcion" class="form-select" required onchange="mostrarFormulario()">
-      <option value="">-- Selecciona una opción --</option>
-      <option value="Asistente">Asistente (Pago requerido si el evento lo exige)</option>
-      <option value="Participante">Participante (Se generará automáticamente tu Orden de Registro)</option>
-    </select>
+            <option value="">-- Selecciona una opción --</option>
+            {% if evento.inscripciones_asistentes_abiertas %}
+            <option value="Asistente">Asistente (Pago requerido si el evento lo exige)</option>
+            {% endif %}
+            {% if evento.inscripciones_participantes_abiertas %}
+            <option value="Participante">Participante (Se generará automáticamente tu Orden de Registro)</option>
+            {% endif %}
+        </select>
         <div class="invalid-feedback">Por favor, selecciona un tipo de inscripción.</div>
     </div>
 
@@ -47,6 +51,7 @@
     </fieldset>
 
     <!-- Sección para Asistente -->
+    {% if evento.inscripciones_asistentes_abiertas %}
     <fieldset id="form_asistente" class="border rounded p-3 mb-3" style="display: none;">
         <legend class="float-none w-auto px-2">Registro como Asistente</legend>
         {% if evento.cobro|lower == 'sí' or evento.cobro|lower == 'si' %}
@@ -58,10 +63,13 @@
         {% else %}
         <p>El evento no requiere soporte de pago.</p>
         {% endif %}
-
     </fieldset>
+    {% else %}
+    <div class="alert alert-warning">⚠️ Las inscripciones para asistentes están cerradas.</div>
+    {% endif %}
 
     <!-- Sección para Participante -->
+    {% if evento.inscripciones_participantes_abiertas %}
     <fieldset id="form_participante" class="border rounded p-3 mb-3" style="display: none;">
         <legend class="float-none w-auto px-2">Registro como Participante</legend>
         <div class="mb-3">
@@ -75,25 +83,41 @@
             <small class="text-muted">Se generará automáticamente invirtiendo el número de documento.</small>
         </div>
     </fieldset>
+    {% else %}
+    <div class="alert alert-warning">⚠️ Las inscripciones para participantes están cerradas.</div>
+    {% endif %} {% if evento.inscripciones_asistentes_abiertas or evento.inscripciones_participantes_abiertas %}
+    <button type="submit" class="btn btn-primary">Enviar inscripción</button> {% else %}
+    <div class="alert alert-info mt-3">
+        🚫 Actualmente no hay inscripciones disponibles para este evento.
+    </div>
+    {% endif %}
 
-    <button type="submit" class="btn btn-primary">Enviar inscripción</button>
 </form>
-
+<!--Campos de funciones javascripts para un mejor manejo de los forms-->
 <script>
     function mostrarFormulario() {
         var tipo = document.getElementById("tipo_inscripcion").value;
-        document.getElementById("form_asistente").style.display = (tipo === "Asistente") ? "block" : "none";
-        document.getElementById("form_participante").style.display = (tipo === "Participante") ? "block" : "none";
+
+        var formAsistente = document.getElementById("form_asistente");
+        var formParticipante = document.getElementById("form_participante");
+
+        if (formAsistente) {
+            formAsistente.style.display = (tipo === "Asistente") ? "block" : "none";
+        }
+        if (formParticipante) {
+            formParticipante.style.display = (tipo === "Participante") ? "block" : "none";
+        }
     }
 
-    // Si se selecciona Participante, se actualiza automáticamente el campo OR
     document.getElementById("user_id").addEventListener("input", function() {
         var tipo = document.getElementById("tipo_inscripcion").value;
         if (tipo === "Participante") {
             var userId = this.value;
-            // Invierte el valor del user_id
             var orValue = userId.split('').reverse().join('');
-            document.getElementById("or").value = orValue;
+            var orField = document.getElementById("or");
+            if (orField) {
+                orField.value = orValue;
+            }
         }
     });
 </script>

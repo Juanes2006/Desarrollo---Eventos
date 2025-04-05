@@ -1,6 +1,6 @@
 {% extends 'base.html' %} {% block eventos_url %} {{ url_for('ventana') }} {% endblock %} {% block eventos_text %} Administrar Eventos {% endblock %} {% block content %}
 <div class="container mt-4">
-    <h2 class="text-center">👥 Gestión de Inscripciones para {{ evento.eve_nombre }}</h2>
+    <h2 class="text-center">👥 Gestión de Inscripciones Participantes: <br> {{ evento.eve_nombre }}</h2>
 
     <!-- Tabla Responsiva -->
     <div class="table-responsive">
@@ -11,6 +11,7 @@
                     <th>👤 Nombre</th>
                     <th>📧 Correo</th>
                     <th>📌 Estado</th>
+                    <th>📂 Documentos</th>
                     <th class="text-center">⚙️ Acciones</th>
                 </tr>
             </thead>
@@ -20,6 +21,7 @@
                     <td>{{ participante.par_id }}</td>
                     <td>{{ participante.par_nombre }}</td>
                     <td>{{ participante.par_correo }}</td>
+
                     <td>
                         {% if participante.par_estado == 'PENDIENTE' %}
                         <span class="badge bg-warning text-dark">⏳ Pendiente</span> {% elif participante.par_estado == 'ACEPTADO' %}
@@ -27,6 +29,17 @@
                         <span class="badge bg-danger">❌ Rechazado</span> {% else %}
                         <span class="badge bg-secondary">🔍 Desconocido</span> {% endif %}
                     </td>
+
+                    <td>
+                        {% if participante.par_eve_documentos %}
+
+                        <a href="{{ url_for('static', filename='uploads/' + participante.par_eve_documentos) }}" target="_blank">
+                                📄 Ver Documentos
+                            </a> {% else %}
+                        <p class="text-muted">No se han cargado documentos.</p>
+                        {% endif %}
+                    </td>
+
                     <td class="text-center">
                         <form action="{{ url_for('actualizar_estado') }}" method="POST">
                             <input type="hidden" name="par_id" value="{{ participante.par_id }}">
@@ -54,5 +67,15 @@
             </tbody>
         </table>
     </div>
+    <h5>👤 Inscripciones de Participantes</h5>
+    {% if evento.inscripciones_participantes_abiertas %}
+    <form method="POST" action="{{ url_for('toggle_inscripcion', tipo='participantes', evento_id=evento.eve_id) }}">
+        <button class="btn btn-warning btn-sm">🔒 Cerrar inscripciones de participantes</button>
+    </form>
+    {% else %}
+    <form method="POST" action="{{ url_for('toggle_inscripcion', tipo='participantes', evento_id=evento.eve_id) }}">
+        <button class="btn btn-success btn-sm">🔓 Abrir inscripciones de participantes</button>
+    </form>
+    {% endif %}
 </div>
 {% endblock %}

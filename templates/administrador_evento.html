@@ -1,4 +1,4 @@
-{% extends 'base.html' %} {% block eventos_url %} {{ url_for('ventana') }} {% endblock %} {% block eventos_text %} Administrar Eventos {% endblock %} {% block nav_links %}
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('ventana') }} {% endblock %} {% block eventos_text %} Administrador {% endblock %} {% block nav_links %}
 <li class="nav-item d-none d-md-block">
     <a class="nav-link btn btn-success text-white" href="{{ url_for('crear_evento') }}">
         ➕ Crear Evento
@@ -24,20 +24,26 @@
                 <tr>
                     <td class="align-middle">{{ evento.eve_nombre }}</td>
                     <td class="text-center">
-                        <div class="d-flex flex-column flex-md-row gap-2">
+                        <div class="d-flex flex-wrap justify-content-center gap-2">
                             <a class="btn btn-warning btn-sm" href="{{ url_for('editar_evento', eve_id=evento.eve_id) }}">
-                                    ✏️ Editar
-                                </a>
+                                ✏️ Editar
+                            </a>
                             <a class="btn btn-primary btn-sm" href="{{ url_for('gestionar_inscripciones', eve_id=evento.eve_id) }}">
-                                    👥 Gestionar Participantes
-                                </a>
-                            <a class="btn btn-secondary btn-sm" href="{{ url_for('gestionar_inscripciones', eve_id=evento.eve_id) }}">
-                                    👥 Gestionar Asistentes
-                                </a>
-
+                                👥 Gestionar Participantes
+                            </a>
+                            <a class="btn btn-secondary btn-sm" href="{{ url_for('gestionar_inscripcion_asis', eve_id=evento.eve_id) }}">
+                                👥 Gestionar Asistentes
+                            </a> {% if evento.eve_estado == "ACTIVO" %}
+                            <form action="{{ url_for('cancelar_evento', eve_id=evento.eve_id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    ❌ Cancelar Evento
+                                </button>
+                            </form>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
+
                 {% endfor %} {% else %}
                 <tr>
                     <td colspan="2" class="text-center text-muted py-3">

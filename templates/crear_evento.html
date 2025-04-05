@@ -1,4 +1,4 @@
-{% extends 'base.html' %} {% block eventos_url %} {{ url_for('ventana') }} {% endblock %} {% block eventos_text %} Administrar Eventos {% endblock %} {% block content %}
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('ventana') }} {% endblock %} {% block eventos_text %} Administrador {% endblock %} {% block content %}
 <h2>Crear Evento</h2>
 <form method="POST" action="{{ url_for('crear_evento') }}" enctype="multipart/form-data">
     <input type="hidden" name="crear_evento" value="1">

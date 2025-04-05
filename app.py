@@ -121,7 +121,8 @@ class Evento(db.Model):
     archivo_programacion = db.Column(db.String(255), nullable=True)  # Nuevo campo para el archivo
 
 
-
+    inscripciones_participantes_abiertas = db.Column(db.Boolean, default=True)
+    inscripciones_asistentes_abiertas = db.Column(db.Boolean, default=True)
     
     # Relaciones muchos-a-muchos
     categorias = db.relationship('Categoria', secondary='eventos_categorias', backref='eventos')
@@ -386,7 +387,7 @@ def registrarme_evento(evento_id):
                 db.session.add(asistente)
     
             soporte_pago = None
-            if evento.cobro == 'SI' and 'soporte_pago' in request.files:
+            if evento.cobro.lower() in ['sí', 'si'] and 'soporte_pago' in request.files:
                 file = request.files['soporte_pago']
                 if file.filename:
                     filename = secure_filename(file.filename)
@@ -704,75 +705,98 @@ def modificar_participante(user_id):
     return render_template('modificar_participante.html', participante=participante)
 
 
-@app.route('/admin/gestionar_inscripciones/<int:eve_id>')
+@app.route('/admin/gestionar_inscripciones/participante/<int:eve_id>')
 def gestionar_inscripciones(eve_id):
     evento = Evento.query.get_or_404(eve_id)
     participantes = db.session.query(
         Participantes.par_id,
         Participantes.par_nombre,
         Participantes.par_correo,
-        ParticipantesEventos.par_estado
+        ParticipantesEventos.par_estado,
+        ParticipantesEventos.par_eve_documentos 
     ).join(ParticipantesEventos, Participantes.par_id == ParticipantesEventos.par_eve_participante_fk)\
     .filter(ParticipantesEventos.par_eve_evento_fk == eve_id).all()
 
     return render_template("gestionar_inscripciones.html", evento=evento, participantes=participantes)
 
+@app.route('/admin/gestionar_inscripciones/asistentes/<int:eve_id>')
+def gestionar_inscripcion_asis(eve_id):
+    evento = Evento.query.get_or_404(eve_id)
+    asistentes = db.session.query(
+        Asistentes.asi_id,
+        Asistentes.asi_nombre,
+        Asistentes.asi_correo,
+        Asistentes.asi_telefono,
+        AsistentesEventos.asi_eve_estado,
+        AsistentesEventos.asi_eve_soporte
+    ).join(AsistentesEventos, Asistentes.asi_id == AsistentesEventos.asi_eve_asistente_fk)\
+    .filter(AsistentesEventos.asi_eve_evento_fk == eve_id).all()
+    
+    return render_template("gestionar_inscripciones_asis.html", evento=evento, asistentes=asistentes)
 
 ####### FUNCION ADICIONAL PARA ACTUALIZAR EL ESTADO DE LOS PARTICIPANTES
 @app.route('/admin/actualizar_estado', methods=['POST'])
 def actualizar_estado():
     par_id = request.form.get('par_id')
+    asi_id = request.form.get('asi_id')
     evento_id = request.form.get('evento_id')
     nuevo_estado = request.form.get('estado')
 
-    # Validar que se enviaron los datos necesarios
-    if not par_id or not evento_id:
+    # Validar que se haya enviado evento_id y al menos uno de los IDs
+    if not evento_id or not (par_id or asi_id):
         flash("Error: Faltan datos para actualizar el estado.", "danger")
         return redirect(request.referrer)
 
-    # Buscar al participante en la tabla ParticipantesEventos para ese evento específico
-    participante_evento = ParticipantesEventos.query.filter_by(
-        par_eve_participante_fk=par_id,
-        par_eve_evento_fk=evento_id
-    ).first()
+    # ✅ CASO PARTICIPANTE
+    if par_id:
+        participante_evento = ParticipantesEventos.query.filter_by(
+            par_eve_participante_fk=par_id,
+            par_eve_evento_fk=evento_id
+        ).first()
 
-    if participante_evento:
-        participante_evento.par_estado = nuevo_estado  # ✅ Asegúrate de que la columna correcta es 'par_estado'
-        db.session.commit()
+        if participante_evento:
+            participante_evento.par_estado = nuevo_estado
+            db.session.commit()
 
-        # Obtener la clave del evento si existe
-        clave_evento = participante_evento.par_eve_clave if participante_evento.par_eve_clave else "No asignada"
+            clave_evento = participante_evento.par_eve_clave if participante_evento.par_eve_clave else "No asignada"
+            participante = Participantes.query.get(par_id)
+            nombre_participante = participante.par_nombre if participante else "Participante"
 
-        # Obtener el nombre del participante
-        participante = Participantes.query.get(par_id)
-        nombre_participante = participante.par_nombre if participante else "Participante"
+            if nuevo_estado == "ACEPTADO":
+                mensaje = Markup(f"""
+                    El participante {nombre_participante} ha sido aceptado, su clave de acceso es: 
+                    <strong id='claveEvento'>{clave_evento}</strong>
+                    <button class="btn btn-sm btn-outline-primary ml-2" onclick="copiarClave()">📋 Copiar Clave</button>
+                """)
+                flash(mensaje, "success")
+            elif nuevo_estado == "RECHAZADO":
+                flash(f"El participante {nombre_participante} ha sido rechazado.", "danger")
+            elif nuevo_estado == "PENDIENTE":
+                flash(f"El participante {nombre_participante} ha sido puesto en estado pendiente.", "warning")
+            else:
+                flash(f"El estado de {nombre_participante} ha sido actualizado a {nuevo_estado}.", "success")
 
-        # Mensajes de notificación según el estado
-        if nuevo_estado == "ACEPTADO":
-            mensaje = Markup(f"""
-                El participante {nombre_participante} ha sido aceptado, su clave de acceso es: 
-                <strong id='claveEvento'>{clave_evento}</strong>
-                <button class="btn btn-sm btn-outline-primary ml-2" onclick="copiarClave()">📋 Copiar Clave</button>
-            """)
-            flash(mensaje, "success")
-            return redirect(url_for("lista_eventos", eve_id=evento_id))  # Redirige a la gestión del evento
-   
-        elif nuevo_estado == "RECHAZADO":
-            flash(f"El participante {nombre_participante} ha sido rechazado.", "danger")
-            return redirect(url_for("lista_eventos", eve_id=evento_id))  # Redirige a la gestión del evento
+            return redirect(url_for("lista_eventos", eve_id=evento_id))
 
-        elif nuevo_estado == "PENDIENTE":
-            flash(f"El participante {nombre_participante} ha sido puesto en estado pendiente.", "warning")
-            return redirect(url_for("lista_eventos", eve_id=evento_id))  # Redirige a la gestión del evento
+    # ✅ CASO ASISTENTE
+    if asi_id:
+        asistente_evento = AsistentesEventos.query.filter_by(
+            asi_eve_asistente_fk=asi_id,
+            asi_eve_evento_fk=evento_id
+        ).first()
 
-        else:
-            flash(f"El estado de {nombre_participante} ha sido actualizado a {nuevo_estado}.", "success")
-            return redirect(url_for("lista_eventos", eve_id=evento_id))  # Redirige a la gestión del evento
+        if asistente_evento:
+            asistente_evento.asi_eve_estado = nuevo_estado
+            db.session.commit()
 
+            asistente = Asistentes.query.get(asi_id)
+            nombre_asistente = asistente.asi_nombre if asistente else "Asistente"
 
-        return redirect(url_for("gestionar_inscripciones", eve_id=evento_id))  # Redirige a la gestión del evento
+            flash(f"El estado del asistente {nombre_asistente} ha sido actualizado a {nuevo_estado}.", "info")
+            return redirect(url_for("lista_eventos", eve_id=evento_id))
 
-    flash("No se encontró la inscripción de este participante en el evento.", "danger")
+    # Si no se encontró ni participante ni asistente
+    flash("No se encontró la inscripción para actualizar.", "danger")
     return redirect(request.referrer)
 
 
@@ -841,6 +865,18 @@ def desactivar_evento(eve_id):
     db.session.commit()
     flash(f"Evento {evento.eve_nombre} desactivado exitosamente.", "success")
     return redirect(url_for("eventos_superadmin"))  
+
+
+@app.route("/cancelar_evento/<int:eve_id>", methods=["POST"])
+def cancelar_evento(eve_id):
+    
+    
+    evento = Evento.query.get_or_404(eve_id)
+    evento.eve_estado = "CANCELADO"
+    db.session.commit()
+    flash(f"Evento {evento.eve_nombre} cancelado exitosamente.", "success")
+    return redirect(url_for("ventana"))
+
 
 
 
@@ -924,6 +960,23 @@ def mi_info():
                            titulo="Mis Eventos Inscritos", 
                            participante=participante, 
                            eventos_inscritos=eventos_inscritos)
+
+############ RUTA ADICIONAL PARA MANEJAR LOS CMABIOS DE ESTADO DE LOS FORMS
+@app.route("/admin/evento/<int:evento_id>/toggle_inscripcion/<string:tipo>", methods=["POST"])
+def toggle_inscripcion(evento_id, tipo):
+    evento = Evento.query.get_or_404(evento_id)
+
+    if tipo == "participantes":
+        evento.inscripciones_participantes_abiertas = not evento.inscripciones_participantes_abiertas
+    elif tipo == "asistentes":
+        evento.inscripciones_asistentes_abiertas = not evento.inscripciones_asistentes_abiertas
+    else:
+        flash("Tipo de inscripción no válido.", "danger")
+        return redirect(request.referrer)
+
+    db.session.commit()
+    flash("Estado de inscripciones actualizado correctamente.", "success")
+    return redirect(request.referrer)
 
 
 # PUNTO DE ENTRADA

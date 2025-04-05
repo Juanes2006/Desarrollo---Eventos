@@ -41,7 +41,12 @@
             <form action="{{ url_for('activar_evento', eve_id=evento.eve_id) }}" method="POST">
                 <button type="submit" class="btn btn-success mt-3">✅ Activar Evento</button>
             </form>
+            {% endif %} {% if evento.eve_estado == "CANCELADO" %}
+            <form action="{{ url_for('activar_evento', eve_id=evento.eve_id) }}" method="POST">
+                <button type="submit" class="btn btn-success mt-3">✅ Activar Evento</button>
+            </form>
             {% endif %}
+
 
 
 
