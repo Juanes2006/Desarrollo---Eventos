@@ -1,9 +1,11 @@
 {% extends 'base.html' %} {% block content %}
+
 <div class="container mt-4">
     <h2 class="text-center">📄 Consultar Inscripciones en Eventos</h2>
 
     <!-- Formulario para ingresar el ID -->
-    <form method="POST" class="mb-4">
+    <form method="POST" class="mb-4" enctype="multipart/form-data">
+
         <div class="input-group">
             <input type="text" name="par_id" class="form-control" placeholder="Ingrese su ID de participante" required>
             <button type="submit" class="btn btn-primary">Consultar</button>
@@ -37,6 +39,10 @@
                 <strong>📂 Documentos proporcionados:</strong>
                 <a href="{{ url_for('static', filename='uploads/' + evento.par_eve_documentos) }}" target="_blank">
                     📄 Ver Documento
+                </a>
+                <br>
+                <a href="{{ url_for('modificar_participante', user_id=participante.par_id) }}" class="btn btn-warning mt-2">
+                    Editar Información
                 </a> {% else %}
                 <p class="text-muted">No se han cargado documentos.</p>
                 {% endif %}

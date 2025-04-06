@@ -27,11 +27,13 @@ UPLOAD_FOLDER = UPLOAD_FOLDER_PAGOS  # Default upload folder
 
 # Extensiones permitidas
 ALLOWED_EXTENSIONS_IMAGENES = {'png', 'jpg', 'jpeg', 'gif'}
-ALLOWED_EXTENSIONS_PAGOS = {'png', 'jpg', 'pdf'}
+ALLOWED_EXTENSIONS_PAGOS = {'png', 'jpg', 'jpeg', 'pdf'}
 ALLOWED_EXTENSIONS_PROGRAMACION = {'pdf'}
 
 # Configurar diferentes rutas en app.config
 app.config['UPLOAD_FOLDER_IMAGENES'] = UPLOAD_FOLDER_IMAGENES
+app.config['UPLOAD_FOLDER_PAGOS'] = UPLOAD_FOLDER_PAGOS
+
 app.config['UPLOAD_FOLDER_PROGRAMACION'] = UPLOAD_FOLDER_PROGRAMACION
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER  # Add default upload folder to config
 app.config['UPLOAD_FOLDER_PROGRAMACION'] = UPLOAD_FOLDER_PROGRAMACION
@@ -48,6 +50,9 @@ def save_file(file, folder, allowed_extensions):
         file.save(os.path.join(folder, filename))
         return filename
     return None
+
+
+
 
 
 # ------------------------------------------------------------------
@@ -180,7 +185,7 @@ class ParticipantesEventos(db.Model):
     par_eve_evento_fk = db.Column(db.Integer, db.ForeignKey('eventos.eve_id'), primary_key=True)
 
     par_eve_fecha_hora = db.Column(db.DateTime)
-    par_eve_documentos = db.Column(db.String(255), nullable=True)
+    par_eve_documentos = db.Column(db.String(255), nullable=True)   
     par_eve_or = db.Column(db.String(255), nullable=True)
     par_eve_clave = db.Column(db.String(45))
     par_estado = db.Column(ENUM('PENDIENTE', 'ACEPTADO', 'RECHAZADO'), nullable=False, default='PENDIENTE')
@@ -440,7 +445,7 @@ def registrarme_evento(evento_id):
             db.session.add(registro)
     
         db.session.commit()
-        flash(f"¡Te has registrado exitosamente como {tipo}!", "success")
+        flash(f"¡Te has preinscrito exitosamente como {tipo}!", "success")
         return redirect(url_for('lista_eventos'))
     
     # Si la solicitud es GET, simplemente renderizamos el formulario
@@ -683,7 +688,10 @@ def modificar_participante(user_id):
     
     if not participante:
         flash("Participante no encontrado", "danger")
-        return redirect(url_for('consulta_qr'))  # Redirige a la consulta QR si no se encuentra el participante
+        return redirect(url_for('consulta_qr'))
+
+    # Obtener el registro de ParticipantesEventos
+    participante_evento = ParticipantesEventos.query.filter_by(par_eve_participante_fk=user_id).first()
 
     if request.method == 'POST':
         participante.par_nombre = request.form['nombre']
@@ -694,16 +702,22 @@ def modificar_participante(user_id):
         if 'documento' in request.files:
             file = request.files['documento']
             if file.filename != '':
+                print("Archivo recibido:", file.filename)
                 filename = save_file(file, app.config['UPLOAD_FOLDER_PAGOS'], ALLOWED_EXTENSIONS_PAGOS)
-                if filename:
-                    participante.par_eve_documentos = filename
+                print("Archivo guardado como:", filename)
+                if filename and participante_evento:
+                    participante_evento.par_eve_documentos = filename
+                    print("Archivo actualizado en DB:", filename)
+                else:
+                    flash("Extensión no permitida o evento no encontrado", "warning")
 
         db.session.commit()
         flash("Información actualizada con éxito", "success")
-        return redirect(url_for('consulta_qr'))  # Redirige tras modificar
+        return redirect(url_for('consulta_qr'))
 
     return render_template('modificar_participante.html', participante=participante)
 
+        
 
 @app.route('/admin/gestionar_inscripciones/participante/<int:eve_id>')
 def gestionar_inscripciones(eve_id):
