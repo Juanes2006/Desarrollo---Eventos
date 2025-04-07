@@ -1,9 +1,13 @@
 {% extends 'base.html' %} {% block eventos_url %} {{ url_for('ventana') }} {% endblock %} {% block eventos_text %} Administrador {% endblock %} {% block nav_links %}
-<li class="nav-item d-none d-md-block">
-    <a class="nav-link btn btn-success text-white" href="{{ url_for('crear_evento') }}">
+<div class="d-flex flex-column flex-md-row gap-2">
+    <a class="btn btn-outline-success" href="{{ url_for('crear_evento') }}">
         ➕ Crear Evento
     </a>
-</li>
+    <a class="btn btn-outline-info" href="{{ url_for('ver_estadisticas') }}">
+        📊 Estadísticas
+    </a>
+</div>
+
 {% endblock %} {% block content %}
 <div class="container mt-4">
 
@@ -57,10 +61,16 @@
 
     <!-- Botón Crear Evento  SOLO SE VE EN LOS MOVILES GRACIAS AL TIPO DE CLASE -->
     <div class="text-center mb-4 d-md-none">
-        <a class="btn btn-success btn-sm w-100" href="{{ url_for('crear_evento') }}">
+        <a class="btn btn-outline-success btn-sm w-100" href="{{ url_for('crear_evento') }}">
             ➕ Crear Evento
         </a>
+        <br><br>
+        <a class="btn btn-outline-info btn-sm w-100" href="{{ url_for('ver_estadisticas') }}">
+                📊 Estadísticas
+            </a>
+
     </div>
+
 
 </div>
 {% endblock %}

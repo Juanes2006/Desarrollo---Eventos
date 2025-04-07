@@ -682,42 +682,53 @@ def verificar_participante():
 
 
 #########  HU15: Modificar la información de un participante
-@app.route('/modificar_participante/<string:user_id>', methods=['GET', 'POST'])
-def modificar_participante(user_id):
+@app.route('/modificar_participante/<string:user_id>/<int:evento_id>', methods=['GET', 'POST'])
+def modificar_participante(user_id, evento_id):
     participante = Participantes.query.get(user_id)
-    
+
     if not participante:
         flash("Participante no encontrado", "danger")
         return redirect(url_for('consulta_qr'))
 
-    # Obtener el registro de ParticipantesEventos
-    participante_evento = ParticipantesEventos.query.filter_by(par_eve_participante_fk=user_id).first()
+    # Buscar la inscripción del participante a ese evento
+    evento_participante = ParticipantesEventos.query.filter_by(
+        par_eve_participante_fk=user_id,
+        par_eve_evento_fk=evento_id
+    ).first()
+
+    # Obtener el evento para mostrar su nombre
+    evento = Evento.query.get(evento_id)
+
+    if not evento_participante or not evento:
+        flash("No se encontró la inscripción o el evento", "danger")
+        return redirect(url_for('consulta_qr'))
 
     if request.method == 'POST':
         participante.par_nombre = request.form['nombre']
         participante.par_correo = request.form['correo']
         participante.par_telefono = request.form['telefono']
 
-        # Si se sube un nuevo documento, lo guardamos
         if 'documento' in request.files:
             file = request.files['documento']
-            if file.filename != '':
-                print("Archivo recibido:", file.filename)
+            if file and file.filename != '':
                 filename = save_file(file, app.config['UPLOAD_FOLDER_PAGOS'], ALLOWED_EXTENSIONS_PAGOS)
-                print("Archivo guardado como:", filename)
-                if filename and participante_evento:
-                    participante_evento.par_eve_documentos = filename
-                    print("Archivo actualizado en DB:", filename)
+                if filename:
+                    evento_participante.par_eve_documentos = filename
                 else:
-                    flash("Extensión no permitida o evento no encontrado", "warning")
+                    flash("Extensión no permitida o error al guardar el archivo", "warning")
 
         db.session.commit()
         flash("Información actualizada con éxito", "success")
-        return redirect(url_for('consulta_qr'))
+        return redirect(url_for('mi_info'))
 
-    return render_template('modificar_participante.html', participante=participante)
+    return render_template(
+        'modificar_participante.html',
+        participante=participante,
+        evento_participante=evento_participante,
+        evento_nombre=evento.eve_nombre
+    )
 
-        
+
 
 @app.route('/admin/gestionar_inscripciones/participante/<int:eve_id>')
 def gestionar_inscripciones(eve_id):
@@ -953,12 +964,11 @@ def mi_info():
         par_id = request.form.get("par_id")
 
         if par_id:
-            # Obtener la información básica del participante
             participante = Participantes.query.filter_by(par_id=par_id).first()
-            
+
             if participante:
-                # Obtener los eventos en los que está inscrito y que estén activos
-                eventos_inscritos = db.session.query(
+                inscripciones = db.session.query(
+                    Evento.eve_id,
                     Evento.eve_nombre,
                     Evento.eve_fecha_inicio,
                     Evento.eve_ciudad,
@@ -967,6 +977,16 @@ def mi_info():
                 ).join(ParticipantesEventos, Evento.eve_id == ParticipantesEventos.par_eve_evento_fk)\
                  .filter(ParticipantesEventos.par_eve_participante_fk == par_id, Evento.eve_estado == "ACTIVO")\
                  .all()
+
+                for inscripcion in inscripciones:
+                    eventos_inscritos.append({
+                        'eve_id': inscripcion[0],
+                        'eve_nombre': inscripcion[1],
+                        'eve_fecha_inicio': inscripcion[2],
+                        'eve_ciudad': inscripcion[3],
+                        'par_estado': inscripcion[4],
+                        'par_eve_documentos': inscripcion[5]
+                    })
             else:
                 flash("No se encontró información para el ID proporcionado.", "danger")
 
@@ -974,6 +994,7 @@ def mi_info():
                            titulo="Mis Eventos Inscritos", 
                            participante=participante, 
                            eventos_inscritos=eventos_inscritos)
+
 
 ############ RUTA ADICIONAL PARA MANEJAR LOS CMABIOS DE ESTADO DE LOS FORMS
 @app.route("/admin/evento/<int:evento_id>/toggle_inscripcion/<string:tipo>", methods=["POST"])
@@ -991,6 +1012,28 @@ def toggle_inscripcion(evento_id, tipo):
     db.session.commit()
     flash("Estado de inscripciones actualizado correctamente.", "success")
     return redirect(request.referrer)
+
+@app.route('/estadisticas')
+def ver_estadisticas():
+    
+    eventos = Evento.query.all()
+
+    estadisticas = []
+
+    for evento in eventos:
+        total_asistentes = AsistentesEventos.query.filter_by(asi_eve_evento_fk=evento.eve_id).count()
+        total_participantes = ParticipantesEventos.query.filter_by(par_eve_evento_fk=evento.eve_id).count()
+
+        estadisticas.append({
+            'evento_id': evento.eve_id,
+            'evento_nombre': evento.eve_nombre,
+            'asistentes': total_asistentes,
+            'participantes': total_participantes,
+            'total': total_asistentes + total_participantes
+        })
+
+    return render_template('estadisticas.html', estadisticas=estadisticas)
+
 
 
 # PUNTO DE ENTRADA
