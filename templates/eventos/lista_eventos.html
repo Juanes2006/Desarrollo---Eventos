@@ -1,0 +1,58 @@
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('main.visitante') }} {% endblock %} {% block eventos_text %} Visitante Web {% endblock %} {% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">{{ titulo if titulo else "Lista de Eventos" }}</h2>
+    <div class="row">
+
+    </div>
+
+    <div class="row">
+        {% if eventos %} {% for evento in eventos %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 event-card rounded">
+                {% if evento.imagen %}
+                <!-- Para que la imagen también se vea redondeada en la parte superior, 
+                         puedes usar "rounded-top" además de card-img-top -->
+                <img src="{{ url_for('static', filename='imagenes/' ~ evento.imagen) }}" class="card-img-top rounded" alt="Imagen del evento" style="height: 200px; width: 100%; object-fit: cover;"> {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ evento.eve_nombre }}</h5>
+                    <p class="card-text flex-grow-1">
+                        {{ evento.eve_descripcion }}<br>
+                        <strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}<br>
+                        <strong>📅 Fecha Inicio:</strong> {{ evento.eve_fecha_inicio }}<br>
+                        <strong>🏁 Fecha Fin:</strong> {{ evento.eve_fecha_fin }}<br>
+                        <strong>🔹 Estado:</strong>
+                        <span class="badge {% if evento.eve_estado=='ACTIVO' %} bg-success {% elif evento.eve_estado=='CREADO' %} bg-warning {% else %} bg-success 
+                        {% endif %} ">
+                                {{ evento.eve_estado }}
+                            </span>
+
+
+                    </p>
+                    <div class="text-center mt-auto">
+                        <a href="{{ url_for('main.evento_detalle', eve_id=evento.eve_id) }}" class="btn btn-primary">
+                            Ver Detalle</a>
+
+
+                        <a href="{{ url_for('registros.registrarme_evento', evento_id=evento.eve_id) }}" class="btn btn-primary">Registrarme</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        {% endfor %} {% else %}
+        <div class="col-12">
+            <p class="no-events">No hay eventos disponibles en este momento.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %} {% block nav_links %}
+
+<li class="nav-item"><a class="nav-link" href="{{ url_for('main.buscar_eventos') }}">Buscar Eventos</a></li>
+<li class="nav-item"><a class="nav-link" href="{{ url_for('qr.consulta_qr') }}">Consultar Boletas</a></li>
+<li class="nav-item">
+    <a class="nav-link" href="{{ url_for('participantes.mi_info', par_id=par_id) }}">Consultar Informacion</a>
+</li>
+{% endblock %}

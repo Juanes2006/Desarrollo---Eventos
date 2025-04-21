@@ -1,0 +1,61 @@
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('superadmin.super_admin') }} {% endblock %} {% block eventos_text %} Super Admin Detalle {% endblock %} {% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white text-center">
+            <h2 class="mb-0">Detalle del Evento</h2>
+        </div>
+        <div class="card-body text-center">
+            <h3 class="text-primary">{{ evento.eve_nombre }}</h3>
+            {% if evento.imagen %}
+            <img src="{{ url_for('static', filename='imagenes/' ~ evento.imagen) }}" class="card-img-top rounded img-fluid" alt="Imagen del evento" style="object-fit: contain; max-width: 100%; max-height: 400px;"> {% else %}
+            <p>No hay imagen disponible para este evento.</p>
+            {% endif %}
+            <p class="text-muted">{{ evento.eve_descripcion }}</p>
+
+            <hr>
+
+            <p><strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }}</p>
+            <p><strong>🏢 Lugar:</strong> {{ evento.eve_lugar }}</p>
+            <p><strong>📅 Fecha Inicio:</strong> {{ evento.eve_fecha_inicio }}</p>
+            <p><strong>📅 Fecha Fin:</strong> {{ evento.eve_fecha_fin }}</p>
+
+
+
+
+
+            <p><strong>📌 Estado:</strong>
+                <span class="badge {% if evento.eve_estado == 'ACTIVO' %} bg-success {% else %} bg-warning {% endif %}">
+                    {{ evento.eve_estado }}
+                </span>
+            </p>
+
+            {% if evento.eve_estado == "CREADO"%}
+            <form action="{{ url_for('eventos.activar_evento', eve_id=evento.eve_id) }}" method="POST">
+                <button type="submit" class="btn btn-success mt-3">✅ Activar Evento</button>
+            </form>
+            {% endif %} {% if evento.eve_estado == "ACTIVO" %}
+            <form action="{{ url_for('eventos.desactivar_evento', eve_id=evento.eve_id) }}" method="POST">
+                <button type="submit" class="btn btn-danger mt-3">❌ Desactivar Evento</button>
+            </form>
+            {% endif %} {% if evento.eve_estado == "INACTIVO" %}
+            <form action="{{ url_for('eventos.activar_evento', eve_id=evento.eve_id) }}" method="POST">
+                <button type="submit" class="btn btn-success mt-3">✅ Activar Evento</button>
+            </form>
+            {% endif %} {% if evento.eve_estado == "CANCELADO" %}
+            <form action="{{ url_for('eventos.activar_evento', eve_id=evento.eve_id) }}" method="POST">
+                <button type="submit" class="btn btn-success mt-3">✅ Activar Evento</button>
+            </form>
+            {% endif %}
+
+
+
+
+
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('superadmin.eventos_superadmin') }}" class="btn btn-secondary">Volver</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

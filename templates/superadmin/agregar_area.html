@@ -1,0 +1,19 @@
+{% extends 'base.html' %} {% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{{ url_for('admin.agregar_area') }}">Agregar Area</a></li>
+<li class="nav-item"><a class="nav-link" href="{{ url_for('admin.agregar_categoria') }}">Aregar Categoria</a></li>
+{% endblock %} {% block eventos_url %} {{ url_for('superadmin.super_admin') }} {% endblock %} {% block eventos_text %} Super Admin {% endblock %} {% block content %}
+<div class="container mt-4">
+    <h2>Agregar Área</h2>
+    <form method="POST" action="{{ url_for('admin.agregar_area') }}">
+        <div class="mb-3">
+            <label for="are_nombre" class="form-label">Nombre del Área</label>
+            <input type="text" class="form-control" name="are_nombre" id="are_nombre" required>
+        </div>
+        <div class="mb-3">
+            <label for="are_descripcion" class="form-label">Descripción del Área</label>
+            <textarea class="form-control" name="are_descripcion" id="are_descripcion"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Agregar Área</button>
+    </form>
+</div>
+{% endblock %}

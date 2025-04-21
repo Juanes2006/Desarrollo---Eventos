@@ -1,0 +1,59 @@
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('main.visitante') }} {% endblock %} {% block eventos_text %} Mi Información {% endblock %} {% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">📄 Consultar Inscripciones en Eventos</h2>
+
+    <form method="POST" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="par_id" class="form-control" placeholder="Ingrese su ID de participante" required>
+            <button type="submit" class="btn btn-primary">Consultar</button>
+        </div>
+    </form>
+
+    {% if participante %}
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">👤 Información Personal</h4>
+            <p><strong>ID:</strong> {{ participante.par_id }}</p>
+            <p><strong>Nombre:</strong> {{ participante.par_nombre }}</p>
+            <p><strong>Correo:</strong> {{ participante.par_correo }}</p>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h4>📅 Eventos en los que estás inscrito</h4>
+        {% if eventos_inscritos %}
+        <ul class="list-group">
+            {% for evento in eventos_inscritos %}
+            <li class="list-group-item">
+                <strong>📌 Evento:</strong> {{ evento.eve_nombre }} <br>
+                <strong>📅 Fecha de inicio:</strong> {{ evento.eve_fecha_inicio }} <br>
+                <strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }} <br>
+
+                <strong>📌 Estado:</strong> {% if evento.par_estado == 'ACEPTADO' %}
+                <span class="badge bg-success">✅ Aceptado</span> {% elif evento.par_estado == 'PENDIENTE' %}
+                <span class="badge bg-warning text-dark">⏳ Pendiente</span> {% else %}
+                <span class="badge bg-danger">❌ Rechazado</span> {% endif %}
+
+                <br> {% if evento.par_eve_documentos %}
+                <strong>📂 Documento:</strong>
+                <a href="{{ url_for('static', filename='uploads/' ~ evento.par_eve_documentos) }}" target="_blank">
+                    📄 Ver Documento
+                </a> {% else %}
+                <p class="text-muted">No se han cargado documentos.</p>
+                {% endif %}
+
+                <br>
+
+                <a href="{{ url_for('participantes.modificar_participante', user_id=participante.par_id, evento_id=evento.eve_id) }}" class="btn btn-warning mt-2">
+                    Editar Información
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">No estás inscrito en ningún evento.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

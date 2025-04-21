@@ -1,0 +1,29 @@
+{% extends 'base.html' %} {% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{{ url_for('main.lista_eventos') }}">Ver Eventos</a></li>
+<li class="nav-item"><a class="nav-link" href="{{ url_for('main.buscar_eventos') }}">Buscar Eventos</a></li>
+{% endblock %} {% block eventos_url %} {{ url_for('main.visitante') }} {% endblock %} {% block eventos_text %} Visitante Web {% endblock %} {% block content %}
+<div class="text-center">
+    <h1 class="mb-3">Bienvenido, visitante</h1>
+    <p class="lead">Aquí podrás ver y buscar los eventos disponibles.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <h3>📅 Ver Eventos</h3>
+            <p>Explora la lista completa de eventos disponibles.</p>
+            <a href="{{ url_for('main.lista_eventos') }}" class="btn btn-custom">Ver Eventos</a>
+        </div>
+    </div>
+
+
+
+    <div class="col-md-6">
+        <div class="card">
+            <h3>🔍 Buscar Eventos</h3>
+            <p>Encuentra eventos específicos usando filtros avanzados.</p>
+            <a href="{{ url_for('main.buscar_eventos') }}" class="btn btn-custom">Buscar Eventos</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

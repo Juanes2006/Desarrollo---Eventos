@@ -1,0 +1,80 @@
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('admin.ventana') }} {% endblock %} {% block eventos_text %} Administrador {% endblock %} {% block content %}
+<h2>Crear Evento</h2>
+<form method="POST" action="{{ url_for('eventos.crear_evento') }}" enctype="multipart/form-data">
+    <input type="hidden" name="crear_evento" value="1">
+
+    <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre</label>
+        <input type="text" class="form-control" name="nombre" id="nombre" required>
+    </div>
+    <div class="mb-3">
+        <label for="descripcion" class="form-label">Descripción</label>
+        <textarea class="form-control" name="descripcion" id="descripcion"></textarea>
+    </div>
+    <div class="mb-3">
+        <label for="ciudad" class="form-label">Ciudad</label>
+        <input type="text" class="form-control" name="ciudad" id="ciudad">
+    </div>
+    <div class="mb-3">
+        <label for="lugar" class="form-label">Lugar</label>
+        <input type="text" class="form-control" name="lugar" id="lugar">
+    </div>
+    <div class="mb-3">
+        <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+        <input type="date" class="form-control" name="fecha_inicio" id="fecha_inicio">
+    </div>
+    <div class="mb-3">
+        <label for="fecha_fin" class="form-label">Fecha Fin</label>
+        <input type="date" class="form-control" name="fecha_fin" id="fecha_fin">
+    </div>
+    <div class="mb-3">
+        <label for="cobro" class="form-label">¿Cobro?</label>
+        <select class="form-control" name="cobro" id="cobro">
+            <option value="">Selecciona una opción</option>
+            <option value="si">Sí</option>
+            <option value="no">No</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="cupos" class="form-label">Cupos (opcional)</label>
+        <input type="number" class="form-control" name="cupos" id="cupos" placeholder="Número de cupos">
+    </div>
+    <div class="mb-3">
+        <label for="categorias" class="form-label">Categoría del Evento</label>
+        <select name="categorias" id="categorias" class="form-select">
+            {% for categoria in categorias %}
+                <option value="{{ categoria.cat_codigo }}">{{ categoria.cat_nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="imagen" class="form-label">Imagen del Evento</label>
+        <input type="file" class="form-control" name="imagen" id="imagen" accept="image/*">
+    </div>
+    <div class="mb-3">
+        <label for="archivo_programacion" class="form-label">Archivo de Programación (PDF)</label>
+        <input type="file" class="form-control" name="archivo_programacion" id="archivo_programacion" accept=".pdf">
+    </div>
+
+
+    <button type="submit" class="btn btn-primary">Crear</button>
+</form>
+{% endblock %} {% block nav_links %}
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="editarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+      Editar Eventos
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="editarDropdown">
+        {% for evento in eventos %}
+        <li>
+            <a class="dropdown-item" href="{{ url_for('eventos.editar_evento', eve_id=evento.eve_id) }}">
+                {{ evento.eve_nombre }}
+            </a>
+        </li>
+        {% else %}
+        <li><span class="dropdown-item">No hay eventos disponibles</span></li>
+        {% endfor %}
+    </ul>
+</li>
+
+{% endblock %}
