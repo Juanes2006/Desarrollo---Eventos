@@ -1,4 +1,4 @@
-{% extends 'base.html' %} {% block eventos_url %} {{ url_for('ventana') }}{% endblock %} {% block eventos_text %} Estadísticas{% endblock %} {% block content %}
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('admin.ventana') }}{% endblock %} {% block eventos_text %} Estadísticas{% endblock %} {% block content %}
 <div class="container mt-4">
     <h2 class="text-center mb-4">📊 Estadísticas de Inscripciones</h2>
 
@@ -11,7 +11,7 @@
                     <th>Asistentes</th>
                     <th>Participantes</th>
                     <th>Total Inscritos</th>
-                    <th>Porcentaje Participantes</th>
+                    <th>Porcentaje Asistentes</th>
                 </tr>
             </thead>
             <tbody>

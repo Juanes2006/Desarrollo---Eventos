@@ -48,17 +48,7 @@
                     {% endfor %}
                 </tbody>
             </table>
-            {% endif %}
-
-            <!--VERSION DESCARGAR  <hr> {% if evento.archivo_programacion %}
-            <a href="{{ url_for('descargar_programacion', event_id=evento.eve_id) }}" class="btn btn-success">
-                📄 Descargar Archivo de Programación
-            </a> {% else %}
-            <p>No hay archivo de programación disponible.</p>
-            {% endif %}-->
-
-            <!--VERSION VER  <hr> -->
-            {% if evento.archivo_programacion %}
+            {% endif %} {% if evento.archivo_programacion %}
             <a href="{{ url_for('static', filename='programacion/' + evento.archivo_programacion) }}" target="_blank" class="btn btn-outline-success">
         📄 Ver Archivo de Programación
     </a> {% else %}

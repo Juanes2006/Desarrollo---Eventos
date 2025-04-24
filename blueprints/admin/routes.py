@@ -98,7 +98,7 @@ def actualizar_estado():
             nombre_asistente = asistente.asi_nombre if asistente else "Asistente"
 
             flash(f"El estado del asistente {nombre_asistente} ha sido actualizado a {nuevo_estado}.", "info")
-            return redirect(url_for("lista_eventos", eve_id=evento_id))
+            return redirect(url_for("main.lista_eventos", eve_id=evento_id))
 
     # Si no se encontró ni participante ni asistente
     flash("No se encontró la inscripción para actualizar.", "danger")
@@ -146,24 +146,27 @@ def agregar_categoria():
 
 
 @admin_bp.route('/estadisticas')
-def estadisticas():
-    eventos = Evento.query.all()
-    categorias = Categoria.query.all()
-    areas = Area.query.all()
 
-    # Obtener estadísticas de participantes y asistentes por evento
-    estadisticas_eventos = []
+def ver_estadisticas():
+    
+    eventos = Evento.query.all()
+
+    estadisticas = []
+
     for evento in eventos:
-        num_participantes = ParticipantesEventos.query.filter_by(par_eve_evento_fk=evento.eve_id).count()
-        num_asistentes = AsistentesEventos.query.filter_by(asi_eve_evento_fk=evento.eve_id).count()
-        estadisticas_eventos.append({
-            'evento': evento,
-            'num_participantes': num_participantes,
-            'num_asistentes': num_asistentes
+        total_asistentes = AsistentesEventos.query.filter_by(asi_eve_evento_fk=evento.eve_id).count()
+        total_participantes = ParticipantesEventos.query.filter_by(par_eve_evento_fk=evento.eve_id).count()
+
+        estadisticas.append({
+            'evento_id': evento.eve_id,
+            'evento_nombre': evento.eve_nombre,
+            'asistentes': total_asistentes,
+            'participantes': total_participantes,
+            'total': total_asistentes + total_participantes,
+            'porcentaje_participantes': (total_participantes / (total_asistentes + total_participantes) * 100) if (total_asistentes + total_participantes) > 0 else 0
         })
 
-    return render_template("estadisticas.html", eventos=eventos, categorias=categorias, areas=areas, estadisticas_eventos=estadisticas_eventos) 
-
+    return render_template('administrador/estadisticas.html', estadisticas=estadisticas)
 
 @admin_bp.route("/admin/evento/<int:evento_id>/toggle_inscripcion/<string:tipo>", methods=["POST"])
 def toggle_inscripcion(evento_id, tipo):

@@ -109,7 +109,7 @@ def editar_evento(eve_id):
 
         db.session.commit()
         flash("Evento editado con éxito.")
-        return redirect(url_for("lista_eventos"))
+        return redirect(url_for("main.lista_eventos"))
 
     return render_template("eventos/editar_evento.html", evento=evento)
 
