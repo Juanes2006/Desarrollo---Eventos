@@ -81,7 +81,7 @@ def actualizar_estado():
             else:
                 flash(f"El estado de {nombre_participante} ha sido actualizado a {nuevo_estado}.", "success")
 
-            return redirect(url_for("lista_eventos", eve_id=evento_id))
+            return redirect(url_for("main.lista_eventos", eve_id=evento_id))
 
     # ✅ CASO ASISTENTE
     if asi_id:

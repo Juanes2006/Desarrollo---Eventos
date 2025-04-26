@@ -49,12 +49,12 @@ def mostrar_qr(event_id, user_id):
     # Si no es ni asistente ni participante, redirigir
     if not asistente_evento and not participante_evento:
         flash("No estás registrado como Asistente ni Participante en este evento.", "danger")
-        return redirect(url_for('consulta_qr'))
+        return redirect(url_for('qr.consulta_qr'))
     
     # ✅ Verificar si el participante fue aceptado
     if participante_evento and participante_evento.par_estado != "ACEPTADO":
         flash("Tu inscripción aún no ha sido aceptada. No puedes obtener el QR.", "danger")
-        return redirect(url_for('consulta_qr'))
+        return redirect(url_for('qr.consulta_qr'))
 
     # ✅ Verificar si el asistente fue aceptado (si aplica)
     if asistente_evento and asistente_evento.asi_eve_estado != "ACEPTADO":
@@ -82,7 +82,7 @@ def mostrar_qr(event_id, user_id):
     evento = Evento.query.get(event_id)
     if not evento:
         flash("El evento no fue encontrado.", "danger")
-        return redirect(url_for('consulta_qr'))
+        return redirect(url_for('qr.consulta_qr'))
     
     return render_template(
         'mostrar_qr.html',

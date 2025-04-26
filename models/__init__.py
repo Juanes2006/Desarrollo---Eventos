@@ -3,7 +3,13 @@ from sqlalchemy.dialects.mysql import ENUM
 
 db = SQLAlchemy()
 
-# Todos tus modelos van aquí ⬇️
+
+# PARA MIGRAR LA BASE DE DATOS, DESCOMENTAR LAS SIGUIENTES LINEAS Y EJECUTAR EN LA TERMINAL:
+#flask db init -> EN ESTE CASO NO SE NECESITA PORQUE YA ESTA INICIALIZADA
+#flask db migrate -m "Agregando tablas"
+#flask db upgrade
+
+
 
 class AdministradorEvento(db.Model):
     __tablename__ = 'administradores_evento'
@@ -75,6 +81,7 @@ class Participantes(db.Model):
     par_correo = db.Column(db.String(100))
     par_telefono = db.Column(db.String(45))
     participantes_eventos = db.relationship('ParticipantesEventos', backref='participante', lazy=True)
+    calificaciones = db.relationship('Calificacion', backref='participante', lazy=True)
 
 class ParticipantesEventos(db.Model):
     __tablename__ = 'participantes_eventos'
@@ -85,3 +92,37 @@ class ParticipantesEventos(db.Model):
     par_eve_or = db.Column(db.String(255), nullable=True)
     par_eve_clave = db.Column(db.String(45))
     par_estado = db.Column(ENUM('PENDIENTE', 'ACEPTADO', 'RECHAZADO'), nullable=False, default='PENDIENTE')
+    
+
+
+class Criterio(db.Model):
+    __tablename__ = 'criterios'
+    cri_id = db.Column(db.Integer, primary_key=True)
+    cri_descripcion = db.Column(db.String(100), nullable=False)
+    cri_peso = db.Column(db.Float, nullable=False)
+    cri_evento_fk = db.Column(db.Integer, nullable=False)
+
+    # Relación con Calificaciones
+    calificaciones = db.relationship('Calificacion', backref='criterio', lazy=True)
+
+
+
+
+class Evaluador(db.Model):
+    __tablename__ = 'evaluadores'
+    eva_id = db.Column(db.String(20), primary_key=True)
+    eva_nombre = db.Column(db.String(100), nullable=False)
+    eva_correo = db.Column(db.String(100), nullable=False)
+    eva_telefono = db.Column(db.String(45), nullable=False)
+
+    # Relación con Calificaciones
+    calificaciones = db.relationship('Calificacion', backref='evaluador', lazy=True)
+
+
+class Calificacion(db.Model):
+    __tablename__ = 'calificaciones'
+    id = db.Column(db.Integer, primary_key=True)  # Es buena práctica tener un id interno en la tabla
+    cal_evaluador_fk = db.Column(db.String(20), db.ForeignKey('evaluadores.eva_id'), nullable=False)
+    cal_criterio_fk = db.Column(db.Integer, db.ForeignKey('criterios.cri_id'), nullable=False)
+    cal_participante_fk = db.Column(db.String(20), db.ForeignKey('participantes.par_id'), nullable=False)
+    cal_valor = db.Column(db.Integer, nullable=False)
