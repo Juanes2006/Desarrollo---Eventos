@@ -1,0 +1,48 @@
+{% extends "base.html" %} {% block title %}Gestionar Criterios{% endblock %} {% block content %}
+<h1>Gestionar Criterios</h1>
+
+<!-- Mensajes de alerta -->
+{% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
+<div class="alert alert-{{ category }}">{{ message }}</div>
+{% endfor %} {% endif %} {% endwith %}
+
+<!-- Formulario para agregar un nuevo criterio -->
+<form method="POST">
+    <input type="text" name="descripcion" placeholder="Descripción del criterio" required>
+    <input type="number" step="any" name="peso" placeholder="Peso" required>
+    <input type="number" name="evento_id" placeholder="ID del Evento" required>
+    <button type="submit">Agregar Criterio</button>
+</form>
+
+<hr>
+
+<!-- Lista de criterios -->
+<h2>Criterios existentes</h2>
+<table border="1">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Descripción</th>
+            <th>Peso</th>
+            <th>ID Evento</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for criterio in criterios %}
+        <tr>
+            <td>{{ criterio.cri_id }}</td>
+            <td>{{ criterio.cri_descripcion }}</td>
+            <td>{{ criterio.cri_peso }}</td>
+            <td>{{ criterio.cri_evento_fk }}</td>
+            <td>
+                <a href="{{ url_for('admin.editar_criterio', criterio_id=criterio.cri_id) }}">Editar</a>
+                <form action="{{ url_for('admin.eliminar_criterio', criterio_id=criterio.cri_id) }}" method="POST" style="display:inline;">
+                    <button type="submit" onclick="return confirm('¿Seguro que deseas eliminar este criterio?')">Eliminar</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

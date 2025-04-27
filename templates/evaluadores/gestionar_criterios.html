@@ -1,0 +1,27 @@
+{% extends "base.html" %} {% block eventos_url %} {{ url_for('admin.ventana') }} {% endblock %} {% block eventos_text %} Administrador {% endblock %} {% block content %}
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gestionar Criterios</title>
+</head>
+
+<body>
+    <h1>Gestionar Criterios</h1>
+
+    <form method="POST">
+        <input type="text" name="descripcion" placeholder="Descripción del criterio" required>
+        <input type="number" step="0.01" name="peso" placeholder="Peso del criterio" required>
+        <input type="number" name="evento_id" placeholder="ID del Evento" required>
+        <button type="submit">Agregar Criterio</button>
+    </form>
+
+    <h2>Lista de Criterios:</h2>
+    <ul>
+        {% for criterio in criterios %}
+        <li>{{ criterio.cri_descripcion }} (Peso: {{ criterio.cri_peso }})</li>
+        {% else %}
+        <li>No hay criterios registrados todavía.</li>
+        {% endfor %}
+    </ul>
+</body>
+{% endblock %}

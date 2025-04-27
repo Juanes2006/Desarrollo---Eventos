@@ -1,0 +1,22 @@
+{% extends "base.html" %} {% block title %}Instrumento de Evaluación{% endblock %} {% block content %}
+<h1>Instrumento de Evaluación</h1>
+
+<form method="POST" action="{{ url_for('participantes.instrumento') }}">
+    <input type="text" name="tipo_instrumento" placeholder="Tipo de instrumento (Rúbrica, Lista de Chequeo, Plantilla)" required>
+    <textarea name="descripcion_instrumento" placeholder="Descripción del instrumento" required></textarea>
+    <input type="number" name="evento_id" placeholder="ID del Evento" required>
+    <button type="submit">Cargar Instrumento</button>
+</form>
+{% if criterios %}
+<ul>
+    {% for criterio in criterios %}
+    <li>
+        <strong>{{ criterio.cri_descripcion }}</strong> - Peso: {{ criterio.cri_peso }}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No se han definido criterios para este evento.</p>
+{% endif %}
+
+<a href="{{ url_for('home') }}">Volver al inicio</a> {% endblock %}

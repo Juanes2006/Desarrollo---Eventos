@@ -1,0 +1,30 @@
+{% extends "base.html" %} {% block title %}Mis Calificaciones{% endblock %} {% block content %}
+<h1>Mis Calificaciones</h1>
+
+{% if calificaciones %}
+<table border="1">
+    <thead>
+        <tr>
+            <th>ID Criterio</th>
+            <th>Calificación</th>
+            <!-- Si tienes observaciones, habilita la siguiente columna -->
+            <!-- <th>Observaciones</th> -->
+        </tr>
+    </thead>
+    <tbody>
+        {% for cal in calificaciones %}
+        <tr>
+            <td>{{ cal.cal_criterio_fk }}</td>
+            <td>{{ cal.cal_valor }}</td>
+            <!-- Si el modelo incluye observaciones, descomenta la siguiente línea -->
+            <!-- <td>{{ cal.observacion if cal.observacion else 'Sin observaciones' }}</td> -->
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<h2>Puntaje Total: {{ puntaje_total }}</h2>
+{% else %}
+<p>No tienes calificaciones registradas.</p>
+{% endif %}
+
+<a href="{{ url_for('#') }}">Volver al inicio</a> {% endblock %}

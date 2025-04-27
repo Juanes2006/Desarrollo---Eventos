@@ -1,0 +1,42 @@
+{% extends "base.html" %} {% block title %}Cargar Instrumentos{% endblock %} {% block content %}
+<h1>Cargar Instrumentos</h1>
+
+<!-- Mensajes de alerta -->
+{% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
+<div class="alert alert-{{ category }}">{{ message }}</div>
+{% endfor %} {% endif %} {% endwith %}
+
+<!-- Formulario para cargar un nuevo instrumento -->
+<form method="POST">
+    <div>
+        <label for="tipo_instrumento">Tipo de instrumento:</label>
+        <input type="text" id="tipo_instrumento" name="tipo_instrumento" placeholder="Rúbrica, Lista de Chequeo, Plantilla" required>
+    </div>
+    <div>
+        <label for="descripcion_instrumento">Descripción del instrumento:</label>
+        <textarea id="descripcion_instrumento" name="descripcion_instrumento" placeholder="Descripción" required></textarea>
+    </div>
+    <div>
+        <label for="evento_id">ID del Evento:</label>
+        <input type="number" id="evento_id" name="evento_id" placeholder="ID del Evento" required>
+    </div>
+    <button type="submit">Cargar Instrumento</button>
+</form>
+
+<hr>
+
+<!-- Lista de instrumentos cargados -->
+<h2>Instrumentos Cargados</h2>
+{% if instrumentos %}
+<ul>
+    {% for instrumento in instrumentos %}
+    <li>
+        <strong>{{ instrumento.inst_tipo }}</strong>: {{ instrumento.inst_descripcion }} (Evento: {{ instrumento.inst_evento_fk }})
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No hay instrumentos cargados.</p>
+{% endif %}
+
+<a href="{{ url_for('home') }}">Volver al inicio</a> {% endblock %}

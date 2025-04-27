@@ -121,8 +121,19 @@ class Evaluador(db.Model):
 
 class Calificacion(db.Model):
     __tablename__ = 'calificaciones'
-    id = db.Column(db.Integer, primary_key=True)  # Es buena práctica tener un id interno en la tabla
+    id = db.Column(db.Integer, primary_key=True)  # Es buena practica tener un ID en todas las tablas
     cal_evaluador_fk = db.Column(db.String(20), db.ForeignKey('evaluadores.eva_id'), nullable=False)
     cal_criterio_fk = db.Column(db.Integer, db.ForeignKey('criterios.cri_id'), nullable=False)
     cal_participante_fk = db.Column(db.String(20), db.ForeignKey('participantes.par_id'), nullable=False)
     cal_valor = db.Column(db.Integer, nullable=False)
+    
+    
+class Instrumento(db.Model):
+    __tablename__ = 'instrumentos'
+    inst_id = db.Column(db.Integer, primary_key=True)
+    inst_tipo = db.Column(db.String(50), nullable=False)
+    inst_descripcion = db.Column(db.Text, nullable=False)
+    inst_evento_fk = db.Column(db.Integer, nullable=False)
+
+    def __repr__(self):
+        return f"<Instrumento {self.inst_tipo}>"

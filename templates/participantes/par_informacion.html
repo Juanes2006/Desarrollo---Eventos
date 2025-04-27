@@ -25,15 +25,14 @@
         <ul class="list-group">
             {% for evento in eventos_inscritos %}
             <li class="list-group-item">
-                <strong>📌 Evento:</strong> {{ evento.eve_nombre }} <br>
-                <strong>📅 Fecha de inicio:</strong> {{ evento.eve_fecha_inicio }} <br>
-                <strong>📍 Ciudad:</strong> {{ evento.eve_ciudad }} <br>
+                <strong>📌 Evento:</strong> {{ evento.evento.eve_nombre }} <br>
+                <strong>📅 Fecha de inicio:</strong> {{ evento.evento.eve_fecha_inicio }} <br>
+                <strong>📍 Ciudad:</strong> {{ evento.evento.eve_ciudad }} <br>
 
                 <strong>📌 Estado:</strong> {% if evento.par_estado == 'ACEPTADO' %}
                 <span class="badge bg-success">✅ Aceptado</span> {% elif evento.par_estado == 'PENDIENTE' %}
                 <span class="badge bg-warning text-dark">⏳ Pendiente</span> {% else %}
                 <span class="badge bg-danger">❌ Rechazado</span> {% endif %}
-
                 <br> {% if evento.par_eve_documentos %}
                 <strong>📂 Documento:</strong>
                 <a href="{{ url_for('static', filename='uploads/' ~ evento.par_eve_documentos) }}" target="_blank">
@@ -41,10 +40,26 @@
                 </a> {% else %}
                 <p class="text-muted">No se han cargado documentos.</p>
                 {% endif %}
+                <br>
+
+                <!-- 🔥 Mostrar Puntaje y Ranking 🔥 -->
+                <strong>🏆 Puntaje Total:</strong> {{ evento.puntaje_total }}<br>
+                <strong>📈 Posición:</strong> {% if evento.posicion %} {% if evento.posicion == 1 %} 🥇 {{ evento.posicion }}° lugar {% elif evento.posicion == 2 %} 🥈 {{ evento.posicion }}° lugar {% elif evento.posicion == 3 %} 🥉 {{ evento.posicion
+                }}° lugar {% else %} {{ evento.posicion }}° lugar {% endif %} {% else %} No disponible {% endif %}
+
+                <br><strong>📋 Instrumento de Evaluación:</strong><br> {% if evento.instrumento %}
+
+                <div class="mt-2">
+                    <p><strong>Tipo:</strong> {{ evento.instrumento.inst_tipo }}</p>
+                    <p><strong>Descripción:</strong> {{ evento.instrumento.inst_descripcion }}</p>
+                </div>
+                {% else %}
+                <p class="text-muted">No hay instrumento registrado para este evento.</p>
+                {% endif %}
 
                 <br>
 
-                <a href="{{ url_for('participantes.modificar_participante', user_id=participante.par_id, evento_id=evento.eve_id) }}" class="btn btn-warning mt-2">
+                <a href="{{ url_for('participantes.modificar_participante', user_id=participante.par_id, evento_id=evento.evento.eve_id) }}" class="btn btn-warning mt-2">
                     Editar Información
                 </a>
             </li>

@@ -53,6 +53,9 @@
 <li class="nav-item"><a class="nav-link" href="{{ url_for('main.buscar_eventos') }}">Buscar Eventos</a></li>
 <li class="nav-item"><a class="nav-link" href="{{ url_for('qr.consulta_qr') }}">Consultar Boletas</a></li>
 <li class="nav-item">
+    <a class="nav-link" href="{{ url_for('evaluadores.seleccionar_evento') }}">Evaluador</a>
+</li>
+<li class="nav-item">
     <a class="nav-link" href="{{ url_for('participantes.mi_info', par_id=par_id) }}">Consultar Informacion</a>
 </li>
 {% endblock %}

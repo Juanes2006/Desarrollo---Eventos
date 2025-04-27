@@ -1,0 +1,34 @@
+{% extends "base.html" %} {% block eventos_url %} {{ url_for('evaluadores.mis_calificaciones') }} {% endblock %} {% block eventos_text %} Mis Calificaciones {% endblock %} {% block content %}
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mis Calificaciones</title>
+</head>
+
+<body>
+    <h1>Mis Calificaciones</h1>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Participante</th>
+                <th>Criterio</th>
+                <th>Calificación</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for calificacion in calificaciones %}
+            <tr>
+                <td>{{ calificacion.participante_nombre }}</td>
+                <td>{{ calificacion.criterio_descripcion }}</td>
+                <td>{{ calificacion.cal_valor }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3">Aún no has realizado calificaciones.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+{% endblock %}

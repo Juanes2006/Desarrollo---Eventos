@@ -1,0 +1,24 @@
+{% extends "base.html" %} {% block content %}
+<h1>🏆 Ranking de Participantes</h1>
+
+<table class="table table-striped table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Posición</th>
+            <th>Nombre</th>
+            <th>Total de Puntaje</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in ranking %}
+        <tr>
+            <td>
+                {% if loop.index == 1 %} 🥇 {% elif loop.index == 2 %} 🥈 {% elif loop.index == 3 %} 🥉 {% else %} {{ loop.index }} {% endif %}
+            </td>
+            <td>{{ item.participante.par_nombre }}</td>
+            <td>{{ item.total_puntaje }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

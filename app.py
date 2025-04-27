@@ -11,8 +11,8 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    db.init_app(app)        # ✅ Aquí es donde se registra la app con SQLAlchemy
-    Migrate(app, db)
+    db.init_app(app)        # Inicializar la base de datos
+    migrate.init_app(app, db)
 
     # Registra Blueprints
     from blueprints.main        import main_bp
@@ -22,6 +22,7 @@ def create_app():
     from blueprints.qr          import qr_bp
     from blueprints.admin       import admin_bp
     from blueprints.super_admin  import super_admin_bp
+    from blueprints.evaluadores  import evaluadores_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(eventos_bp)
@@ -30,6 +31,7 @@ def create_app():
     app.register_blueprint(qr_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(super_admin_bp)
+    app.register_blueprint(evaluadores_bp)
 
     return app
 

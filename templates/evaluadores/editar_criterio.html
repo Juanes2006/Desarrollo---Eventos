@@ -1,0 +1,23 @@
+{% extends "base.html" %} {% block content %}
+<h1>Editar Criterio (Evaluador)</h1>
+
+<form method="POST">
+    <div>
+        <label for="descripcion">Descripción:</label>
+        <input type="text" id="descripcion" name="descripcion" value="{{ criterio.cri_descripcion }}" required>
+    </div>
+
+    <div>
+        <label for="peso">Peso:</label>
+        <input type="number" id="peso" name="peso" value="{{ criterio.cri_peso }}" required>
+    </div>
+
+    <div>
+        <label for="evento_id">Evento ID:</label>
+        <input type="number" id="evento_id" name="evento_id" value="{{ criterio.cri_evento_fk }}" required>
+    </div>
+
+    <button type="submit">Actualizar Criterio</button>
+</form>
+
+<a href="{{ url_for('evaluadores.gestionar_criterios_evaluador') }}">Volver a la lista de criterios</a> {% endblock %}

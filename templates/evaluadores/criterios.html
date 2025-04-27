@@ -1,0 +1,25 @@
+{% extends "base.html" %} {% block content %}
+<h1>Gestionar Criterios (Evaluador)</h1>
+
+<form method="POST">
+    <input type="text" name="descripcion" placeholder="Descripción" required>
+    <input type="number" name="peso" placeholder="Peso" required>
+    <input type="number" name="evento_id" placeholder="ID del Evento" required>
+    <button type="submit">Agregar Criterio</button>
+</form>
+
+<h2>Lista de Criterios</h2>
+<ul>
+    {% for criterio in criterios %}
+    <li>
+        {{ criterio.cri_descripcion }} - Peso: {{ criterio.cri_peso }}
+        <a href="{{ url_for('evaluadores.editar_criterio_evaluador', criterio_id=criterio.cri_id) }}">Editar</a>
+        <form action="{{ url_for('evaluadores.eliminar_criterio_evaluador', criterio_id=criterio.cri_id) }}" method="POST" style="display:inline;">
+            <button type="submit" onclick="return confirm('¿Seguro que deseas eliminar este criterio?')">Eliminar</button>
+        </form>
+    </li>
+    {% else %}
+    <li>No hay criterios aún.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

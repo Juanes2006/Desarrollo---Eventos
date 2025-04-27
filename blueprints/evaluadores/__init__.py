@@ -1,4 +1,10 @@
 from flask import Blueprint
-evaluador_bp = Blueprint('evaluador', __name__, url_prefix='/evaluador', template_folder='../../templates/evaluador')
-from models import db, Evaluador, Criterio, Calificacion, ParticipantesEventos, Participantes, AsistentesEventos, Asistentes, Evento
-from . import routes
+
+evaluadores_bp = Blueprint(
+    'evaluadores',                 # Nombre interno
+    __name__,
+    url_prefix='/evaluador',        # Prefijo para todas las rutas
+    template_folder='../../templates/evaluador'  # Ajusta según tu estructura
+)
+
+from . import routes  # Este importa tus rutas

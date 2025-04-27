@@ -1,0 +1,25 @@
+{% extends "base.html" %} {% block content %} {% block eventos_text %} Calificaciones Participantes {% endblock %} {% endblock %} {% block content %}
+<h1>Calificaciones de {{ participante.nombre }}</h1>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Criterio</th>
+            <th>Peso</th>
+            <th>Puntaje Obtenido</th>
+            <th>Observaciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for calificacion in calificaciones %}
+        <tr>
+            <td>{{ calificacion.criterio.cri_descripcion }}</td>
+            <td>{{ calificacion.criterio.cri_peso }}%</td>
+            <td>{{ calificacion.puntaje }}</td>
+            <td>{{ calificacion.observacion }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ url_for('administrador.ver_participantes') }}">Volver a la lista de participantes</a> {% endblock %}

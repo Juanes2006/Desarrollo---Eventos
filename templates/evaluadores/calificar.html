@@ -1,0 +1,24 @@
+{% extends "base.html" %} {% block eventos_url %} {{ url_for('evaluadores.calificar') }} {% endblock %} {% block eventos_text %} Calificar Participantes {% endblock %} {% block content %}
+
+<head>
+    <meta charset="UTF-8">
+    <title>Calificar Participantes</title>
+</head>
+
+<body>
+    <h1>Calificar Participantes</h1>
+
+    <form method="POST">
+        <select name="participante_id" required>
+            <option value="" disabled selected>Seleccione un Participante</option>
+            {% for participante in participantes %}
+                <option value="{{ participante.par_id }}">{{ participante.par_nombre }}</option>
+            {% endfor %}
+        </select> {% for criterio in criterios %}
+        <label>{{ criterio.cri_descripcion }} (Peso: {{ criterio.cri_peso }})</label>
+        <input type="number" name="calificaciones[{{ criterio.cri_id }}]" min="0" max="100" required><br> {% endfor %}
+
+        <button type="submit">Guardar Calificación</button>
+    </form>
+</body>
+{% endblock %}

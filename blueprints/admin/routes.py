@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash
 from . import admin_bp
 from markupsafe import Markup
-from models import db, Participantes, ParticipantesEventos, Asistentes, AsistentesEventos, Area, Categoria, Evento
+from models import db,Criterio,Instrumento, Participantes, ParticipantesEventos, Asistentes, AsistentesEventos, Area, Categoria, Evento, Calificacion
 
 
 
@@ -183,3 +183,110 @@ def toggle_inscripcion(evento_id, tipo):
     db.session.commit()
     flash("Estado de inscripciones actualizado correctamente.", "success")
     return redirect(request.referrer)
+
+# Listar y agregar criterios
+@admin_bp.route('/criterios', methods=['GET', 'POST'])
+def gestionar_criterios():
+    if request.method == 'POST':
+        descripcion = request.form.get('descripcion')
+        peso = request.form.get('peso')
+        evento_id = request.form.get('evento_id')
+        
+        if descripcion and peso and evento_id:
+            nuevo_criterio = Criterio(
+                cri_descripcion=descripcion,
+                cri_peso=peso,
+                cri_evento_fk=evento_id
+            )
+            db.session.add(nuevo_criterio)
+            db.session.commit()
+            flash('Criterio agregado correctamente', 'success')
+        else:
+            flash('Faltan datos', 'danger')
+
+        return redirect(url_for('administrador.gestionar_criterios'))
+    
+    criterios = Criterio.query.all()
+    return render_template('administrador/criterios.html', criterios=criterios)
+
+# Editar criterio
+@admin_bp.route('/criterios/<int:criterio_id>/editar', methods=['GET', 'POST'])
+def editar_criterio(criterio_id):
+    criterio = Criterio.query.get_or_404(criterio_id)
+    if request.method == 'POST':
+        criterio.cri_descripcion = request.form.get('descripcion')
+        criterio.cri_peso = request.form.get('peso')
+        criterio.cri_evento_fk = request.form.get('evento_id')
+        db.session.commit()
+        flash('Criterio actualizado', 'success')
+        return redirect(url_for('administrador.gestionar_criterios'))
+    return render_template('administrador/editar_criterio.html', criterio=criterio)
+
+# Eliminar criterio
+@admin_bp.route('/criterios/<int:criterio_id>/eliminar', methods=['POST'])
+def eliminar_criterio(criterio_id):
+    criterio = Criterio.query.get_or_404(criterio_id)
+    db.session.delete(criterio)
+    db.session.commit()
+    flash('Criterio eliminado', 'success')
+    return redirect(url_for('administrador.gestionar_criterios'))
+
+
+@admin_bp.route('/instrumentos', methods=['GET', 'POST'])
+def cargar_instrumentos():
+    if request.method == 'POST':
+        tipo_instrumento = request.form.get('tipo_instrumento')
+        descripcion_instrumento = request.form.get('descripcion_instrumento')
+        evento_id = request.form.get('evento_id')
+        
+        # Validación básica para verificar que los campos no estén vacíos
+        if tipo_instrumento and descripcion_instrumento and evento_id:
+            nuevo_instrumento = Instrumento(
+                inst_tipo=tipo_instrumento,
+                inst_descripcion=descripcion_instrumento,
+                inst_evento_fk=int(evento_id)
+            )
+            db.session.add(nuevo_instrumento)
+            db.session.commit()
+            flash('Instrumento cargado correctamente', 'success')
+        else:
+            flash('Debes completar todos los campos', 'danger')
+        
+        return redirect(url_for('admin.cargar_instrumentos'))
+    
+    # Consulta todos los instrumentos para mostrarlos
+    instrumentos = Instrumento.query.all()
+    return render_template('administrador/instrumentos.html', instrumentos=instrumentos)
+
+
+
+# Para administrador y evaluador
+@admin_bp.route('/calificaciones/<int:participante_id>')
+def ver_calificaciones(participante_id):
+    calificaciones = Calificacion.query.filter_by(cal_participante_fk=participante_id).all()
+    participante = Participantes.query.get_or_404(participante_id)
+    return render_template('administrador/ver_calificaciones.html', calificaciones=calificaciones, participante=participante)
+
+
+
+@admin_bp.route('/ranking/<int:evento_id>')
+def ver_ranking(evento_id):
+    # Obtener todos los participantes de ese evento
+    participantes = Participantes.query.filter_by(par_evento_fk=evento_id).all()
+    
+    ranking = []
+
+    for participante in participantes:
+        # Sumar todos los puntajes del participante
+        puntajes = Calificacion.query.filter_by(cal_participante_fk=participante.id).all()
+        total_puntaje = sum([p.puntaje for p in puntajes])
+        
+        ranking.append({
+            'participante': participante,
+            'total_puntaje': total_puntaje
+        })
+
+    # Ordenar de mayor a menor puntaje
+    ranking.sort(key=lambda x: x['total_puntaje'], reverse=True)
+
+    return render_template('participantes/ranking.html', ranking=ranking)

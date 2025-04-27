@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% block eventos_url %}{{ url_for('consulta_qr') }}{% endblock %} {% block eventos_text %}Verificar Participante{% endblock %} {% block content %}
+{% extends 'base.html' %}{% block eventos_url %}{{ url_for('qr.consulta_qr') }}{% endblock %} {% block eventos_text %}Verificar Participante{% endblock %} {% block content %}
 <div class="container mt-4">
     <h2 class="text-center mb-4">Verificar Identidad</h2>
 
@@ -13,7 +13,7 @@
         </div>
 
         <button type="submit" class="btn btn-primary">Continuar</button>
-        <a href="{{ url_for('consulta_qr') }}" class="btn btn-secondary">Cancelar</a>
+        <a href="{{ url_for('qr.consulta_qr') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>
 {% endblock %}
