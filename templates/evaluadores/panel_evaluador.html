@@ -1,0 +1,63 @@
+{% extends 'base.html' %} {% block eventos_text %} PANEL EVALUADOR {% endblock %} {% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">🎯 Panel de Evaluador</h2>
+
+    <!-- Gestión de Instrumentos y Criterios -->
+    <div class="row mt-4">
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm p-3">
+                <h4>📋 Gestionar Criterios</h4>
+                <p>Agrega o edita los criterios de evaluación.</p>
+                <a href="{{ url_for('evaluadores.gestionar_criterios', evento_id=evento.eve_id) }}" class="btn btn-primary">
+                    Gestionar Criterios
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm p-3">
+                <h4>📋 Cargar Instrumento</h4>
+                <p>Agrega o edita el instrumento de evaluación.</p>
+                <a href="{{ url_for('evaluadores.cargar_instrumento', evento_id=evento.eve_id) }}" class="btn btn-primary">
+                    Cargar Instrumento
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Participantes -->
+    {% if participantes|length == 0 %}
+    <div class="alert alert-warning mt-4">
+        🚫 No hay participantes asignados a este evento.
+    </div>
+    {% else %}
+    <div class="row mt-4">
+        {% for p in participantes %}
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm p-3">
+                <h4>📋 Ver Participantes </h4>
+                <p>Gestiona y agrega calificaciones para este participante.</p>
+                <a href="{{ url_for('evaluadores.lista_participantes',
+                                        eva_id=evaluador.eva_id,
+                                        evento_id=evento.eve_id,
+                                        par_id=p.par_id) }}" class="btn btn-success">
+                                        Ver Participantes                    </a>
+            </div>
+        </div>
+        {% endfor %}
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm p-3">
+                <h4>📋 Ranking </h4>
+                <p>Puedes ver los participantes y sus calificaciones.</p>
+                <a href="{{ url_for('evaluadores.ver_ranking',
+                                        eva_id=evaluador.eva_id,
+                                        evento_id=evento.eve_id) }}" class="btn btn-success">
+                                        Ver Ranking                    </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

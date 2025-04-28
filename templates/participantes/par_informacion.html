@@ -28,7 +28,6 @@
                 <strong>📌 Evento:</strong> {{ evento.evento.eve_nombre }} <br>
                 <strong>📅 Fecha de inicio:</strong> {{ evento.evento.eve_fecha_inicio }} <br>
                 <strong>📍 Ciudad:</strong> {{ evento.evento.eve_ciudad }} <br>
-
                 <strong>📌 Estado:</strong> {% if evento.par_estado == 'ACEPTADO' %}
                 <span class="badge bg-success">✅ Aceptado</span> {% elif evento.par_estado == 'PENDIENTE' %}
                 <span class="badge bg-warning text-dark">⏳ Pendiente</span> {% else %}
@@ -46,13 +45,10 @@
                 <strong>🏆 Puntaje Total:</strong> {{ evento.puntaje_total }}<br>
                 <strong>📈 Posición:</strong> {% if evento.posicion %} {% if evento.posicion == 1 %} 🥇 {{ evento.posicion }}° lugar {% elif evento.posicion == 2 %} 🥈 {{ evento.posicion }}° lugar {% elif evento.posicion == 3 %} 🥉 {{ evento.posicion
                 }}° lugar {% else %} {{ evento.posicion }}° lugar {% endif %} {% else %} No disponible {% endif %}
-
                 <br><strong>📋 Instrumento de Evaluación:</strong><br> {% if evento.instrumento %}
 
-                <div class="mt-2">
-                    <p><strong>Tipo:</strong> {{ evento.instrumento.inst_tipo }}</p>
-                    <p><strong>Descripción:</strong> {{ evento.instrumento.inst_descripcion }}</p>
-                </div>
+                <p><strong>Tipo:</strong> {{ evento.instrumento.inst_tipo }}</p>
+                <p><strong>Descripción:</strong> {{ evento.instrumento.inst_descripcion }}</p>
                 {% else %}
                 <p class="text-muted">No hay instrumento registrado para este evento.</p>
                 {% endif %}

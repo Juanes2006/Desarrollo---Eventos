@@ -1,113 +1,251 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
-from models import Criterio, Calificacion, Instrumento, Participantes, ParticipantesEventos, Evento
+from flask import Blueprint, current_app,   render_template, request, redirect, url_for, flash 
+from models import Criterio, Calificacion, Instrumento, Participantes, ParticipantesEventos, Evento, Evaluador
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func, desc
 from app import db
 from . import evaluadores_bp
 
-@evaluadores_bp.route('/panel/<int:evento_id>', methods=['GET'])
-def panel_evaluador(evento_id):
-    return render_template('evaluadores/evaluador_base.html', evento_id=evento_id)
+@evaluadores_bp.route('/evaluador/<string:eva_id>/evento/<int:evento_id>/panel')
+def panel_evaluador(eva_id, evento_id):
+    """
+    Vista para el panel del evaluador donde se gestionan los participantes y calificaciones.
+    """
+    # Obtiene el evaluador por su ID
+    evaluador = Evaluador.query.get_or_404(eva_id)
+    
+    # Obtiene el evento por su ID
+    evento = Evento.query.get_or_404(evento_id)
+
+    # Obtiene los participantes aceptados para el evento
+    participantes_eventos = ParticipantesEventos.query.filter_by(
+        par_eve_evento_fk=evento_id,
+        par_estado='ACEPTADO'
+    ).all()
+
+    # Extrae los participantes desde la relación
+    participantes = [pe.participante for pe in participantes_eventos]
+
+    # Renderiza la plantilla del panel del evaluador con los datos necesarios
+    return render_template('evaluadores/panel_evaluador.html',
+                           evaluador=evaluador,
+                           evento=evento,
+                           participantes=participantes)
+
 
 @evaluadores_bp.route('/seleccionar_evento', methods=['GET'])
 def seleccionar_evento():
     # Aquí deberías traer los eventos en los que el usuario es evaluador
     eventos = Evento.query.all()  # o solo eventos activos para evaluar
-    return render_template('evaluadores/seleccionar_evento.html', eventos=eventos)
+    evaluador = Evaluador.query.first()
+    return render_template('evaluadores/seleccionar_evento.html', eventos=eventos, evaluador=evaluador)
 
 
-# HU44: Cargar instrumentos
-@evaluadores_bp.route('/instrumento/<int:evento_id>')
-def ver_instrumento(evento_id):
-    instrumento = Instrumento.query.filter_by(inst_evento_fk=evento_id).first()
+
+
+
+@evaluadores_bp.route('/criterios/<int:evento_id>', methods=['GET', 'POST'])
+def gestionar_criterios(evento_id):
     criterios = Criterio.query.filter_by(cri_evento_fk=evento_id).all()
-    return render_template('evaluadores/instrumento.html', instrumento=instrumento, criterios=criterios, evento_id=evento_id)
+    instrumento = Instrumento.query.filter_by(inst_evento_fk=evento_id).first()
+    participantes = db.session.query(Participantes).join(ParticipantesEventos).filter(
+        ParticipantesEventos.par_eve_evento_fk == evento_id,
+        ParticipantesEventos.par_estado == 'ACEPTADO'  # si quieres sólo aceptados
+    ).all()
 
-# HU45: Calificar participante
-@evaluadores_bp.route('/calificar/<string:participante_id>', methods=['GET', 'POST'])
-def calificar_participante(participante_id):
-    criterios = Criterio.query.all()
     if request.method == 'POST':
-        for criterio in criterios:
-            calificacion = request.form.get(str(criterio.cri_id))
-            if calificacion:
-                nueva_calificacion = Calificacion(
-                    cal_evaluador_fk='EVALUADOR_ID',  # <-- debes pasar el id correcto
-                    cal_criterio_fk=criterio.cri_id,
-                    cal_participante_fk=participante_id,
-                    cal_valor=int(calificacion)
-                )
-                db.session.add(nueva_calificacion)
-        db.session.commit()
-        flash('Calificaciones guardadas', 'success')
-        return redirect(url_for('evaluadores.calificar_participante', participante_id=participante_id))
-    return render_template('evaluadores/calificar.html', criterios=criterios, participante_id=participante_id)
+        accion = request.form.get('accion')
 
-# HU46: Tabla de posiciones
-@evaluadores_bp.route('/posiciones')
-def tabla_posiciones():
-    posiciones = db.session.query(
-        Calificacion.cal_participante_fk,
-        db.func.sum(Calificacion.cal_valor).label('puntaje_total')
-    ).group_by(Calificacion.cal_participante_fk).order_by(db.desc('puntaje_total')).all()
-    
-    return render_template('evaluadores/tabla_posiciones.html', posiciones=posiciones)
+        if accion == 'crear':
+            descripcion = request.form.get('descripcion')
+            peso = request.form.get('peso')
 
-# HU47: Calificaciones otorgadas por evaluador
-@evaluadores_bp.route('/mis-calificaciones/<string:evaluador_id>')
-def mis_calificaciones(evaluador_id):
-    calificaciones = Calificacion.query.filter_by(cal_evaluador_fk=evaluador_id).all()
-    return render_template('evaluadores/mis_calificaciones.html', calificaciones=calificaciones)
-
-# Listar y crear criterios
-@evaluadores_bp.route('/criterios', methods=['GET', 'POST'])
-def gestionar_criterios_evaluador():
-    if request.method == 'POST':
-        descripcion = request.form.get('descripcion')
-        peso = request.form.get('peso')
-        evento_id = request.form.get('evento_id')
-        
-        if descripcion and peso and evento_id:
             nuevo_criterio = Criterio(
                 cri_descripcion=descripcion,
-                cri_peso=peso,
+                cri_peso=float(peso),
                 cri_evento_fk=evento_id
             )
             db.session.add(nuevo_criterio)
             db.session.commit()
-            flash('Criterio agregado correctamente', 'success')
-        else:
-            flash('Faltan datos para agregar el criterio', 'danger')
-        
-        return redirect(url_for('evaluadores.gestionar_criterios_evaluador'))
-    
-    criterios = Criterio.query.all()
-    return render_template('evaluadores/criterios.html', criterios=criterios)
+            flash('Criterio creado exitosamente.', 'success')
 
-# Editar criterio
-@evaluadores_bp.route('/criterios/<int:criterio_id>/editar', methods=['GET', 'POST'])
-def editar_criterio_evaluador(criterio_id):
-    criterio = Criterio.query.get_or_404(criterio_id)
+        elif accion == 'editar':
+            criterio_id = request.form.get('criterio_id')
+            criterio = Criterio.query.get(criterio_id)
+            if criterio:
+                criterio.cri_descripcion = request.form.get('descripcion')
+                criterio.cri_peso = float(request.form.get('peso'))
+                db.session.commit()
+                flash('Criterio actualizado exitosamente.', 'success')
+            else:
+                flash('Criterio no encontrado.', 'danger')
+
+        elif accion == 'eliminar':
+            criterio_id = request.form.get('criterio_id')
+            criterio = Criterio.query.get(criterio_id)
+            if criterio:
+                db.session.delete(criterio)
+                db.session.commit()
+                flash('Criterio eliminado exitosamente.', 'success')
+            else:
+                flash('Criterio no encontrado.', 'danger')
+
+        return redirect(url_for('evaluadores.gestionar_criterios', evento_id=evento_id))
+
+    return render_template('evaluadores/criterios.html', criterios=criterios, evento_id=evento_id , instrumento=instrumento, participantes=participantes)
+
+
+@evaluadores_bp.route('/evaluador/evento/<int:evento_id>/instrumento', methods=['GET', 'POST'])
+def cargar_instrumento(evento_id):
+    instrumento_existente = Instrumento.query.filter_by(inst_evento_fk=evento_id).first()
+
     if request.method == 'POST':
-        criterio.cri_descripcion = request.form.get('descripcion')
-        criterio.cri_peso = request.form.get('peso')
-        criterio.cri_evento_fk = request.form.get('evento_id')
+        tipo = request.form['tipo']
+        descripcion = request.form['descripcion']
+
+        if instrumento_existente:
+            # Actualizar
+            instrumento_existente.inst_tipo = tipo
+            instrumento_existente.inst_descripcion = descripcion
+            db.session.commit()
+            flash('Instrumento actualizado exitosamente.', 'success')
+        else:
+            # Crear
+            nuevo_instrumento = Instrumento(
+                inst_tipo=tipo,
+                inst_descripcion=descripcion,
+                inst_evento_fk=evento_id
+            )
+            db.session.add(nuevo_instrumento)
+            db.session.commit()
+            flash('Instrumento cargado exitosamente.', 'success')
+
+        return redirect(url_for('evaluadores.cargar_instrumento', evento_id=evento_id))
+
+    return render_template('evaluadores/cargar_instrumento.html', instrumento=instrumento_existente, evento_id=evento_id)
+
+
+@evaluadores_bp.route('/evaluador/<string:eva_id>/evento/<int:evento_id>/participantes')
+def lista_participantes(eva_id, evento_id):
+    """
+    Muestra la lista de participantes aceptados para el evento.
+    """
+    # Se buscan las relaciones de participantes que están aceptados en el evento
+    participantes_eventos = ParticipantesEventos.query.filter_by(
+        par_eve_evento_fk=evento_id,
+        par_estado='ACEPTADO'
+    ).all()
+
+    # Se extrae la lista real de participantes
+    participantes = [pe.participante for pe in participantes_eventos]
+
+    return render_template('evaluadores/lista_participantes.html',
+                           eva_id=eva_id,
+                           evento_id=evento_id,
+                           participantes=participantes)
+
+# 2. Calificar un participante
+@evaluadores_bp.route('/evaluador/<string:eva_id>/evento/<int:evento_id>/participante/<string:par_id>/calificar',
+                      methods=['GET', 'POST'])
+def calificar_participante(eva_id, evento_id, par_id):
+    """
+    GET: Muestra el formulario de calificación con los criterios del evento.
+    POST: Guarda (o actualiza) las calificaciones ingresadas por el evaluador para cada criterio.
+    """
+    # Se valida la existencia de evaluador, evento y participante
+    evaluador = Evaluador.query.get_or_404(eva_id)
+    evento = Evento.query.get_or_404(evento_id)
+    participante = Participantes.query.get_or_404(par_id)
+
+    # Se obtienen todos los criterios vinculados al evento
+    criterios = Criterio.query.filter_by(cri_evento_fk=evento_id).all()
+
+    if request.method == 'POST':
+        # Recorremos cada criterio para procesar la calificación
+        for criterio in criterios:
+            # El nombre del input en el formulario debe ser 'criterio_{{ criterio.cri_id }}'
+            field_name = f'criterio_{criterio.cri_id}'
+            if field_name in request.form:
+                try:
+                    valor = int(request.form[field_name])
+                except ValueError:
+                    flash(f"El valor para el criterio {criterio.cri_descripcion} debe ser numérico.", "danger")
+                    continue
+
+                # Revisamos si ya existe una calificación para este evaluador/criterio/participante
+                calificacion = Calificacion.query.filter_by(
+                    cal_evaluador_fk=evaluador.eva_id,
+                    cal_criterio_fk=criterio.cri_id,
+                    cal_participante_fk=participante.par_id
+                ).first()
+
+                if calificacion:
+                    # Actualizar la calificación existente
+                    calificacion.cal_valor = valor
+                else:
+                    # Crear una nueva calificación
+                    nueva_calificacion = Calificacion(
+                        cal_evaluador_fk=evaluador.eva_id,
+                        cal_criterio_fk=criterio.cri_id,
+                        cal_participante_fk=participante.par_id,
+                        cal_valor=valor
+                    )
+                    db.session.add(nueva_calificacion)
         db.session.commit()
-        flash('Criterio actualizado correctamente', 'success')
-        return redirect(url_for('evaluadores.gestionar_criterios_evaluador'))
-    return render_template('evaluadores/editar_criterio.html', criterio=criterio)
+        flash("Calificaciones guardadas correctamente.", "success")
+        return redirect(url_for('evaluadores.calificar_participante',
+                                eva_id=evaluador.eva_id,
+                                evento_id=evento.eve_id,
+                                par_id=participante.par_id))
 
-# Eliminar criterio
-@evaluadores_bp.route('/criterios/<int:criterio_id>/eliminar', methods=['POST'])
-def eliminar_criterio_evaluador(criterio_id):
-    criterio = Criterio.query.get_or_404(criterio_id)
-    db.session.delete(criterio)
-    db.session.commit()
-    flash('Criterio eliminado correctamente', 'success')
-    return redirect(url_for('evaluadores.gestionar_criterios_evaluador'))
+    # Si es GET, se cargan las calificaciones ya guardadas (si existieran) para precargar el formulario
+    existing = {
+        cal.cal_criterio_fk: cal.cal_valor
+        for cal in Calificacion.query.filter_by(
+            cal_evaluador_fk=evaluador.eva_id,
+            cal_participante_fk=participante.par_id
+        ).all()
+    }
 
-# Para evaluador
-@evaluadores_bp.route('/calificaciones/<int:participante_id>')
-def ver_calificaciones_evaluador(participante_id):
-    calificaciones = Calificacion.query.filter_by(cal_participante_fk=participante_id).all()
-    participante = Participantes.query.get_or_404(participante_id)
-    return render_template('evaluadores/ver_calificaciones.html', calificaciones=calificaciones, participante=participante)
+    return render_template('evaluadores/calificar.html',
+                           evaluador=evaluador,
+                           evento=evento,
+                           participante=participante,
+                           criterios=criterios,
+                           existing=existing)
+    
+    
+    
+@evaluadores_bp.route('/evaluador/<string:eva_id>/evento/<int:evento_id>/ranking')
+def ver_ranking(eva_id, evento_id):
+    """
+    Muestra el ranking (tabla de posiciones) de todos los participantes 
+    en el evento, calculando la suma ponderada de sus calificaciones.
+    Solo debería accederse si el evaluador (eva_id) tiene permiso sobre el evento.
+    """
+
+    # 1. Verificar la existencia del evaluador y evento (opcional, según tu control)
+    evaluador = Evaluador.query.get_or_404(eva_id)
+    evento = Evento.query.get_or_404(evento_id)
+    # Opcional: Verificar si 'eva_id' está realmente asignado a ese evento (depende de tu modelo).
+
+    # 2. Hacer la consulta para obtener la calificación total (suma ponderada) 
+    #    de cada participante en este evento.
+    ranking = (
+        db.session.query(
+            Participantes.par_id.label('participante_id'),
+            Participantes.par_nombre.label('participante_nombre'),
+            func.sum(Calificacion.cal_valor * Criterio.cri_peso).label('puntaje_total')
+        )
+        .join(Calificacion, Calificacion.cal_participante_fk == Participantes.par_id)
+        .join(Criterio, Criterio.cri_id == Calificacion.cal_criterio_fk)
+        .join(Evento, Evento.eve_id == Criterio.cri_evento_fk)
+        .filter(Evento.eve_id == evento_id)
+        .group_by(Participantes.par_id)
+        .order_by(desc('puntaje_total'))  # Orden desc para que el primero tenga el mayor puntaje
+    ).all()
+
+    # 3. Renderizar la plantilla, enviando el ranking
+    return render_template('evaluadores/ranking.html',
+                           evaluador=evaluador,
+                           evento=evento,
+                           ranking=ranking)

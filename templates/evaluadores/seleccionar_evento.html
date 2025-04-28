@@ -8,7 +8,7 @@
                 <div class="card-body text-center">
                     <h5 class="card-title">{{ evento.eve_nombre }}</h5>
                     <p class="card-text">{{ evento.eve_ciudad }}</p>
-                    <a href="{{ url_for('evaluadores.panel_evaluador', evento_id=evento.eve_id) }}" class="btn btn-primary">
+                    <a href="{{ url_for('evaluadores.panel_evaluador', eva_id=evaluador.eva_id, evento_id=evento.eve_id) }}" class="btn btn-primary">
                                 Entrar a Evaluar
                             </a>
                 </div>

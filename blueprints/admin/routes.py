@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash
 from . import admin_bp
 from markupsafe import Markup
-from models import db,Criterio,Instrumento, Participantes, ParticipantesEventos, Asistentes, AsistentesEventos, Area, Categoria, Evento, Calificacion
+from models import db,Criterio,Instrumento, Participantes, ParticipantesEventos, Asistentes, AsistentesEventos, Area, Categoria, Evento, Calificacion, AdministradorEvento, Evaluador
 
 
 
@@ -290,3 +290,114 @@ def ver_ranking(evento_id):
     ranking.sort(key=lambda x: x['total_puntaje'], reverse=True)
 
     return render_template('participantes/ranking.html', ranking=ranking)
+
+
+
+####################### ACA HACER LO MISMO QUE EN EL DE EVALUADORES #######################
+
+
+# Ruta para el panel del administrador
+@admin_bp.route('/administrador/<string:admin_id>/evento/<int:evento_id>/panel')
+def panel_administrador(admin_id, evento_id):
+    administrador = AdministradorEvento.query.get_or_404(admin_id)
+    evento = Evento.query.get_or_404(evento_id)
+
+    participantes_eventos = ParticipantesEventos.query.filter_by(
+        par_eve_evento_fk=evento_id,
+        par_estado='ACEPTADO'
+    ).all()
+
+    participantes = [pe.participante for pe in participantes_eventos]
+
+    return render_template('administradores/panel_administrador.html',
+                            administrador=administrador,
+                            evento=evento,
+                            participantes=participantes)
+
+# Ruta para seleccionar un evento
+@admin_bp.route('/seleccionar_evento', methods=['GET'])
+def seleccionar_evento_admin():
+    eventos = Evento.query.all()  # O solo eventos activos para gestionar
+    return render_template('administradores/seleccionar_evento.html', eventos=eventos)
+
+# Ruta para gestionar criterios
+@admin_bp.route('/criterios/<int:evento_id>', methods=['GET', 'POST'])
+def gestionar_criterios_admin(evento_id):
+    criterios = Criterio.query.filter_by(cri_evento_fk=evento_id).all()
+    instrumento = Instrumento.query.filter_by(inst_evento_fk=evento_id).first()
+    participantes = db.session.query(Participantes).join(ParticipantesEventos).filter(
+        ParticipantesEventos.par_eve_evento_fk == evento_id,
+        ParticipantesEventos.par_estado == 'ACEPTADO'
+    ).all()
+
+    if request.method == 'POST':
+        accion = request.form.get('accion')
+
+        if accion == 'crear':
+            descripcion = request.form.get('descripcion')
+            peso = request.form.get('peso')
+
+            nuevo_criterio = Criterio(
+                cri_descripcion=descripcion,
+                cri_peso=float(peso),
+                cri_evento_fk=evento_id
+            )
+            db.session.add(nuevo_criterio)
+            db.session.commit()
+            flash('Criterio creado exitosamente.', 'success')
+
+        elif accion == 'editar':
+            criterio_id = request.form.get('criterio_id')
+            criterio = Criterio.query.get(criterio_id)
+            if criterio:
+                criterio.cri_descripcion = request.form.get('descripcion')
+                criterio.cri_peso = float(request.form.get('peso'))
+                db.session.commit()
+                flash('Criterio actualizado exitosamente.', 'success')
+            else:
+                flash('Criterio no encontrado.', 'danger')
+
+        elif accion == 'eliminar':
+            criterio_id = request.form.get('criterio_id')
+            criterio = Criterio.query.get(criterio_id)
+            if criterio:
+                db.session.delete(criterio)
+                db.session.commit()
+                flash('Criterio eliminado exitosamente.', 'success')
+            else:
+                flash('Criterio no encontrado.', 'danger')
+
+        return redirect(url_for('administradores_bp.gestionar_criterios', evento_id=evento_id))
+
+    return render_template('administradores/criterios.html', criterios=criterios, evento_id=evento_id , instrumento=instrumento, participantes=participantes)
+
+# Ruta para cargar el instrumento de evaluación
+@admin_bp.route('/administrador/evento/<int:evento_id>/instrumento', methods=['GET', 'POST'])
+def cargar_instrumento_admin(evento_id):
+    instrumento_existente = Instrumento.query.filter_by(inst_evento_fk=evento_id).first()
+
+    if request.method == 'POST':
+        tipo = request.form['tipo']
+        descripcion = request.form['descripcion']
+
+        if instrumento_existente:
+            # Actualizar
+            instrumento_existente.inst_tipo = tipo
+            instrumento_existente.inst_descripcion = descripcion
+            db.session.commit()
+            flash('Instrumento actualizado exitosamente.', 'success')
+        else:
+            # Crear
+            nuevo_instrumento = Instrumento(
+                inst_tipo=tipo,
+                inst_descripcion=descripcion,
+                inst_evento_fk=evento_id
+            )
+            db.session.add(nuevo_instrumento)
+            db.session.commit()
+            flash('Instrumento cargado exitosamente.', 'success')
+
+        return redirect(url_for('administradores_bp.cargar_instrumento', evento_id=evento_id))
+
+    return render_template('administradores/cargar_instrumento.html', instrumento=instrumento_existente, evento_id=evento_id)
+

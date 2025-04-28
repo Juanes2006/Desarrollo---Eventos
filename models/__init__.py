@@ -57,6 +57,20 @@ class Evento(db.Model):
     inscripciones_asistentes_abiertas = db.Column(db.Boolean, default=True)
     categorias = db.relationship('Categoria', secondary='eventos_categorias', backref='eventos')
 
+    
+    participantes = db.relationship(
+        'Participantes', 
+        secondary='participantes_eventos',
+        primaryjoin='Evento.eve_id == ParticipantesEventos.par_eve_evento_fk',
+        secondaryjoin='Participantes.par_id == ParticipantesEventos.par_eve_participante_fk',
+        backref='eventos'
+    )
+    
+
+    def get_participant_count(self):
+        return len(self.participantes)
+
+
 class Asistentes(db.Model):
     __tablename__ = 'asistentes'
     asi_id = db.Column(db.String(20), primary_key=True)
@@ -129,11 +143,14 @@ class Calificacion(db.Model):
     
     
 class Instrumento(db.Model):
+
     __tablename__ = 'instrumentos'
     inst_id = db.Column(db.Integer, primary_key=True)
     inst_tipo = db.Column(db.String(50), nullable=False)
     inst_descripcion = db.Column(db.Text, nullable=False)
     inst_evento_fk = db.Column(db.Integer, nullable=False)
+
+
 
     def __repr__(self):
         return f"<Instrumento {self.inst_tipo}>"

@@ -147,7 +147,7 @@ def mi_info():
 
     return render_template("participantes/par_informacion.html", 
                            titulo="Mis Eventos Inscritos", 
-                           participante=participante, par_id=par_id,
+                           participante=participante,
                            eventos_inscritos=eventos_inscritos)
 
 

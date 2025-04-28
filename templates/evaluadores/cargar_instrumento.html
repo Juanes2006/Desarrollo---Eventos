@@ -1,0 +1,29 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-5">
+    <div class="card shadow p-4 rounded-4">
+        <h2 class="text-center mb-4">📋 Cargar Instrumento de Evaluación</h2>
+
+        <form method="POST">
+            <div class="mb-3">
+                <label for="tipo" class="form-label">Tipo de Instrumento:</label>
+                <select name="tipo" id="tipo" class="form-select" required>
+                    <option value="Rúbrica" {% if instrumento and instrumento.inst_tipo == 'Rúbrica' %}selected{% endif %}>Rúbrica</option>
+                    <option value="Lista de Chequeo" {% if instrumento and instrumento.inst_tipo == 'Lista de Chequeo' %}selected{% endif %}>Lista de Chequeo</option>
+                    <option value="Plantilla" {% if instrumento and instrumento.inst_tipo == 'Plantilla' %}selected{% endif %}>Plantilla</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción:</label>
+                <textarea name="descripcion" id="descripcion" class="form-control" rows="4" required>{{ instrumento.inst_descripcion if instrumento else '' }}</textarea>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-success btn-lg">
+                    {% if instrumento %}Actualizar{% else %}Cargar{% endif %} Instrumento
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
