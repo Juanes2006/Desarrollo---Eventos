@@ -34,6 +34,12 @@
             </div>
             {% endif %}
 
+            <a href="{{ url_for('admin.descargar_ranking', evento_id=evento.eve_id) }}" class="btn btn-success">
+                <i class="bi bi-download"></i> Descargar Ranking
+            </a>
+
+
+
             <div class="mt-4">
                 <a href="{{ url_for('admin.ventana') }}" class="btn btn-secondary">
                     <i class="bi bi-arrow-left-circle me-1"></i> Volver

@@ -1,5 +1,8 @@
 from flask import render_template, request, redirect, url_for, flash
 from . import admin_bp
+import io
+import csv
+from flask import make_response
 from sqlalchemy import func, desc
 from markupsafe import Markup
 from models import db,Criterio,Instrumento,evaluador_evento, Participantes, ParticipantesEventos, Asistentes, AsistentesEventos, Area, Categoria, Evento, Calificacion, AdministradorEvento, Evaluador
@@ -547,3 +550,55 @@ def gestionar_evaluadores(eve_id):
                            evento=evento, 
                            evaluadores=evaluadores)
 
+from flask import Response
+
+@admin_bp.route('/admin/evento/<int:evento_id>/descargar_ranking')
+def descargar_ranking(evento_id):
+    evento = Evento.query.get_or_404(evento_id)
+
+    # Buscar los participantes de este evento
+    participantes_evento = ParticipantesEventos.query.filter_by(par_eve_evento_fk=evento_id).all()
+    data = []
+    for pe in participantes_evento:
+        participante = pe.participante  # gracias a backref
+        # Calificaciones de ese participante
+        calificaciones = Calificacion.query.filter_by(cal_participante_fk=participante.par_id).all()
+        puntaje_total = sum(c.cal_valor for c in calificaciones)
+
+        data.append({
+            'participante_id': participante.par_id,
+            'participante_nombre': participante.par_nombre,
+            'puntaje_total': puntaje_total
+        })
+
+    # Ordenar por puntaje total descendente
+    data.sort(key=lambda x: x['puntaje_total'], reverse=True)
+
+    # Crear el CSV
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Encabezados del CSV
+    headers = ["Posición", "Participante", "Puntaje Total"]
+    writer.writerow(headers)
+
+    # Escribir filas de datos
+    for posicion, participante in enumerate(data, start=1):
+        participante_nombre = participante.get('participante_nombre', 'Nombre Desconocido')
+        participante_id = participante.get('participante_id', 'ID Desconocido')
+        puntaje_total = participante.get('puntaje_total', 0)
+
+        fila = [
+            posicion,
+            f"{participante_nombre} ({participante_id})",
+            "{:.2f}".format(puntaje_total)
+        ]
+        writer.writerow(fila)
+
+
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment;filename=ranking_evento_{evento_id}.csv"}
+    )

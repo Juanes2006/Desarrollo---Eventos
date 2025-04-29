@@ -66,7 +66,7 @@ def crear_evento():
         db.session.commit()
 
         flash(f"¡Se ha creado un nuevo evento! {nombre}")
-        return redirect(url_for("super_adm"))
+        return redirect(url_for("superadmin.super_admin"))
 
     categorias = Categoria.query.all()
     eventos = Evento.query.all()

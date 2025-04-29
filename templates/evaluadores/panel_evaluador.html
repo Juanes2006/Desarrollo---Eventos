@@ -1,4 +1,4 @@
-{% extends 'main/base.html' %} {% block eventos_url %}{{ url_for('evaluadores.panel_evaluador') }}{% endblock %} {% block eventos_text %} Panel Evaluador{% endblock %} {% block nav_links %}
+{% extends 'main/base.html' %} {% block eventos_text %} Panel Evaluador{% endblock %} {% block nav_links %}
 <div class="d-flex flex-column flex-md-row gap-2">
     <a href="{{ url_for('evaluadores.seleccionar_evento') }}" class="btn btn-outline-primary">
         <i class="fas fa-arrow-left me-1"></i> Volver Atrás
@@ -44,7 +44,7 @@
     </div>
     {% else %}
     <div class="row g-3 mt-4">
-        {% for p in participantes %}
+
         <div class="col-md-6">
             <div class="card shadow-sm p-4 h-100">
                 <h4 class="mb-2">👤 Calificar Participantes</h4>
@@ -52,12 +52,12 @@
                 <a href="{{ url_for('evaluadores.lista_participantes',
                                             eva_id=evaluador.eva_id,
                                             evento_id=evento.eve_id,
-                                            par_id=p.par_id) }}" class="btn btn-success mt-2">
+                                            ) }}" class="btn btn-success mt-2">
                             Ver Participante
                         </a>
             </div>
         </div>
-        {% endfor %}
+
 
         <div class="col-md-6">
             <div class="card shadow-sm p-4 h-100">
