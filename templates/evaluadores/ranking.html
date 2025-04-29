@@ -21,7 +21,7 @@
                         <tr {% if posicion==1 %} class="table-warning" {% elif posicion==2 %} class="table-secondary" {% elif posicion==3 %} class="table-info" {% endif %}>
                             <td>{{ posicion }}</td>
                             <td>{{ row.participante_nombre }} ({{ row.participante_id }})</td>
-                            <td class="text-end">{{ "%.2f"|format(row.puntaje_total) }}</td>
+                            <td class="text-end">{{row.puntaje_total / 100 }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

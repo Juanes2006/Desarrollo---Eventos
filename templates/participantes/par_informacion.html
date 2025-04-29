@@ -35,33 +35,34 @@
                 <br> {% if evento.par_eve_documentos %}
                 <strong>📂 Documento:</strong>
                 <a href="{{ url_for('static', filename='uploads/' ~ evento.par_eve_documentos) }}" target="_blank">
-                    📄 Ver Documento
-                </a> {% else %}
+                        📄 Ver Documento
+                    </a> {% else %}
                 <p class="text-muted">No se han cargado documentos.</p>
                 {% endif %}
                 <br>
 
-                <!-- 🔥 Mostrar Puntaje y Ranking 🔥 -->
-                <strong>🏆 Puntaje Total:</strong> {{ evento.puntaje_total }}<br>
+                <!-- Mostrar Puntaje y Ranking -->
+                <strong>🏆 Puntaje Total:</strong> {% if evento.criterios and evento.criterios|length > 0 %} {{ (evento.puntaje_total / (evento.criterios|length))|round(2) }} {% else %} No disponible {% endif %}<br>
                 <strong>📈 Posición:</strong> {% if evento.posicion %} {% if evento.posicion == 1 %} 🥇 {{ evento.posicion }}° lugar {% elif evento.posicion == 2 %} 🥈 {{ evento.posicion }}° lugar {% elif evento.posicion == 3 %} 🥉 {{ evento.posicion
-                }}° lugar {% else %} {{ evento.posicion }}° lugar {% endif %} {% else %} No disponible {% endif %}
-                <br><strong>📋 Instrumento de Evaluación:</strong><br> {% if evento.instrumento %}
+                }}° lugar {% else %} {{ evento.posicion }}° lugar {% endif %} {% else %} No disponible {% endif %}<br>
+
+                <strong>📋 Instrumento de Evaluación:</strong><br> {% if evento.instrumento %}
                 <p><strong>Tipo:</strong> {{ evento.instrumento.inst_tipo }}</p>
                 <p><strong>Descripción:</strong> {{ evento.instrumento.inst_descripcion }}</p>
                 {% else %}
                 <p class="text-muted">No hay instrumento registrado para este evento.</p>
                 {% endif %} {% if evento.criterios %}
+
                 <strong>📊 Criterios:</strong><br>
                 <ul>
                     {% for criterio in evento.criterios %}
-                    <li>{{ criterio.cri_descripcion }}</li>
+                    <li>{{ criterio.cri_descripcion }} - {{criterio.cri_peso }}%</li>
+
                     {% endfor %}
                 </ul>
                 {% else %}
                 <p class="text-muted">No hay criterios registrados para este evento.</p>
                 {% endif %}
-
-
 
                 <br>
 

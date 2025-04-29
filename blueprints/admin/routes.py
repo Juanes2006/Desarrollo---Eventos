@@ -297,72 +297,98 @@ def cargar_instrumentos():
 
 
 # Para administrador y evaluador
-@admin_bp.route('/calificaciones/<int:participante_id>')
-def ver_calificaciones(participante_id):
-    calificaciones = Calificacion.query.filter_by(cal_participante_fk=participante_id).all()
-    participante = Participantes.query.get_or_404(participante_id)
-    return render_template('administrador/ver_calificaciones.html', calificaciones=calificaciones, participante=participante)
-
-
-
-
-
-####################### ACA HACER LO MISMO QUE EN EL DE EVALUADORES #######################
-
-
-# Ruta para el panel del administrador
-
-
-# Ruta para gestionar criterios
 @admin_bp.route('/criterios/<int:evento_id>', methods=['GET', 'POST'])
 def gestionar_criterios_admin(evento_id):
+    # Consulta los criterios actuales y el instrumento
     criterios = Criterio.query.filter_by(cri_evento_fk=evento_id).all()
     instrumento = Instrumento.query.filter_by(inst_evento_fk=evento_id).first()
-    participantes = db.session.query(Participantes).join(ParticipantesEventos).filter(
-        ParticipantesEventos.par_eve_evento_fk == evento_id,
-        ParticipantesEventos.par_estado == 'ACEPTADO'
-    ).all()
-
+    
     if request.method == 'POST':
         accion = request.form.get('accion')
+        peso_str = request.form.get('peso')
+
+        # Convertir el peso a número flotante, en caso de error, mostrar mensaje y redirigir.
+        try:
+            peso = float(peso_str) if peso_str else 0
+        except ValueError:
+            flash('El peso ingresado no es válido.', 'danger')
+            return redirect(url_for('admin.gestionar_criterios_admin', evento_id=evento_id))
 
         if accion == 'crear':
             descripcion = request.form.get('descripcion')
-            peso = request.form.get('peso')
+            # Se consulta la suma actual de pesos directamente desde la base de datos.
+            suma_actual = db.session.query(db.func.sum(Criterio.cri_peso)).filter_by(cri_evento_fk=evento_id).scalar() or 0
 
-            nuevo_criterio = Criterio(
-                cri_descripcion=descripcion,
-                cri_peso=float(peso),
-                cri_evento_fk=evento_id
-            )
-            db.session.add(nuevo_criterio)
-            db.session.commit()
-            flash('Criterio creado exitosamente.', 'success')
+            # Si al agregar el nuevo peso se superaría el 100%, se muestra el error y se redirige.
+            if suma_actual + peso > 100:
+                flash(f'Error: La suma de los porcentajes no puede superar el 100% (actual: {suma_actual}%, intento agregar: {peso}%).', 'danger')
+                return redirect(url_for('admin.gestionar_criterios_admin', evento_id=evento_id))
+            else:
+                nuevo_criterio = Criterio(
+                    cri_descripcion=descripcion,
+                    cri_peso=peso,
+                    cri_evento_fk=evento_id
+                )
+                db.session.add(nuevo_criterio)
+                db.session.commit()
+                flash('Criterio creado exitosamente.', 'success')
 
         elif accion == 'editar':
             criterio_id = request.form.get('criterio_id')
             criterio = Criterio.query.get(criterio_id)
+
             if criterio:
-                criterio.cri_descripcion = request.form.get('descripcion')
-                criterio.cri_peso = float(request.form.get('peso'))
-                db.session.commit()
-                flash('Criterio actualizado exitosamente.', 'success')
+                # Se calcula la suma de los pesos excluyendo el criterio que se pretende actualizar.
+                suma_sin_este = db.session.query(db.func.sum(Criterio.cri_peso)).filter(
+                    Criterio.cri_evento_fk == evento_id,
+                    Criterio.cri_id != criterio.cri_id
+                ).scalar() or 0
+
+                if suma_sin_este + peso > 100:
+                    flash(f'Error: La suma de los porcentajes no puede superar el 100% (actual sin este: {suma_sin_este}%, intento editar a: {peso}%).', 'danger')
+                    return redirect(url_for('admin.gestionar_criterios_admin', evento_id=evento_id))
+                else:
+                    criterio.cri_descripcion = request.form.get('descripcion')
+                    criterio.cri_peso = peso
+                    db.session.commit()
+                    flash('Criterio actualizado exitosamente.', 'success')
             else:
                 flash('Criterio no encontrado.', 'danger')
 
         elif accion == 'eliminar':
             criterio_id = request.form.get('criterio_id')
             criterio = Criterio.query.get(criterio_id)
+
             if criterio:
-                db.session.delete(criterio)
-                db.session.commit()
-                flash('Criterio eliminado exitosamente.', 'success')
+                calificaciones_vinculadas = Calificacion.query.filter_by(cal_criterio_fk=criterio_id).count()
+                if calificaciones_vinculadas > 0:
+                    flash(
+                        f'No se puede eliminar el criterio "{criterio.cri_descripcion}" porque tiene {calificaciones_vinculadas} calificación(es) asociada(s).',
+                        'danger'
+                    )
+                else:
+                    db.session.delete(criterio)
+                    db.session.commit()
+                    flash('Criterio eliminado exitosamente.', 'success')
             else:
                 flash('Criterio no encontrado.', 'danger')
 
-        return redirect(url_for('admin.gestionar_criterios', evento_id=evento_id))
+        return redirect(url_for('admin.gestionar_criterios_admin', evento_id=evento_id))
 
-    return render_template('administrador/criterios.html', criterios=criterios, evento_id=evento_id , instrumento=instrumento, participantes=participantes)
+    # GET method: se calcula el total de peso asignado
+    total_peso = db.session.query(db.func.sum(Criterio.cri_peso)).filter_by(cri_evento_fk=evento_id).scalar() or 0
+
+    return render_template(
+        'administrador/criterios.html',
+        criterios=criterios,
+        instrumento=instrumento,
+        evento_id=evento_id,
+        total_peso=round(total_peso, 2)
+    )
+
+    # Verificación del total actual para mostrar feedback
+    
+
 
 # Ruta para cargar el instrumento de evaluación
 @admin_bp.route('/administrador/evento/<int:evento_id>/instrumento', methods=['GET', 'POST'])
