@@ -1,5 +1,5 @@
-from flask import Blueprint, current_app,   render_template, request, redirect, url_for, flash 
-from models import Criterio, Calificacion, Instrumento, Participantes, ParticipantesEventos, Evento, Evaluador
+from flask import Blueprint, current_app,   render_template, request, redirect, url_for, flash, session
+from models import Criterio, Calificacion, Instrumento, Participantes, ParticipantesEventos, Evento, Evaluador, evaluador_evento
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, desc
 from app import db
@@ -34,11 +34,19 @@ def panel_evaluador(eva_id, evento_id):
 
 @evaluadores_bp.route('/seleccionar_evento', methods=['GET'])
 def seleccionar_evento():
-    # Aquí deberías traer los eventos en los que el usuario es evaluador
-    eventos = Evento.query.all()  # o solo eventos activos para evaluar
-    evaluador = Evaluador.query.first()
-    return render_template('evaluadores/seleccionar_evento.html', eventos=eventos, evaluador=evaluador)
+    if 'evaluador_id' not in session:
+        flash('Debes iniciar sesión primero.', 'warning')
+        return redirect(url_for('evaluadores.iniciosesion'))
 
+    eventos = Evento.query.all()
+    evaluador = Evaluador.query.filter_by(eva_id=session['evaluador_id']).first()
+    eventos = (
+        db.session.query(Evento)
+        .join(evaluador_evento, evaluador_evento.c.evento_id == Evento.eve_id)
+        .filter(evaluador_evento.c.evaluador_id == evaluador.eva_id)
+        .all()
+    )
+    return render_template('evaluadores/seleccionar_evento.html', eventos=eventos, evaluador=evaluador)
 
 
 
@@ -249,3 +257,28 @@ def ver_ranking(eva_id, evento_id):
                            evaluador=evaluador,
                            evento=evento,
                            ranking=ranking)
+    
+    
+    
+@evaluadores_bp.route('/login', methods=['GET', 'POST'])
+def iniciosesion():
+    if request.method == 'POST':
+        eva_id = request.form.get('eva_id')  # o correo, dependiendo cómo quieras identificarlo
+
+        evaluador = Evaluador.query.filter_by(eva_id=eva_id).first()
+        
+        if evaluador:
+            session['evaluador_id'] = evaluador.eva_id  # Guardamos en sesión
+            flash('Inicio de sesión exitoso', 'success')
+            return redirect(url_for('evaluadores.seleccionar_evento'))
+        else:
+            flash('Evaluador no encontrado, verifica tus datos', 'danger')
+            return redirect(url_for('evaluadores.iniciosesion'))
+
+    return render_template('evaluadores/inicio_de_sesion.html')
+
+@evaluadores_bp.route('/cerrar_sesion', methods=['POST'])
+def cerrar_sesion():
+    session.pop('evaluador_id', None)  # Elimina el evaluador de la sesión
+    flash('Sesión cerrada exitosamente.', 'success')
+    return redirect(url_for('evaluadores.iniciosesion'))  # Redirige al login

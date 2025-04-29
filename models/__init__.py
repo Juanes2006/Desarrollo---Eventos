@@ -128,10 +128,17 @@ class Evaluador(db.Model):
     eva_nombre = db.Column(db.String(100), nullable=False)
     eva_correo = db.Column(db.String(100), nullable=False)
     eva_telefono = db.Column(db.String(45), nullable=False)
+    
+    eventos = db.relationship('Evento', secondary='evaluador_evento', backref=db.backref('evaluadores', lazy=True))
+
 
     # Relación con Calificaciones
     calificaciones = db.relationship('Calificacion', backref='evaluador', lazy=True)
 
+evaluador_evento = db.Table('evaluador_evento',
+    db.Column('evaluador_id', db.String(20), db.ForeignKey('evaluadores.eva_id'), primary_key=True),
+    db.Column('evento_id', db.Integer, db.ForeignKey('eventos.eve_id'), primary_key=True)
+)
 
 class Calificacion(db.Model):
     __tablename__ = 'calificaciones'

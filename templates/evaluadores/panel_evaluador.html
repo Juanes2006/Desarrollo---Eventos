@@ -1,4 +1,21 @@
-{% extends 'base.html' %} {% block eventos_text %} PANEL EVALUADOR {% endblock %} {% block content %}
+{% extends 'base.html' %} {% block eventos_text %} PANEL EVALUADOR {% endblock %} {% block nav_links %}
+
+<div class="d-flex flex-column flex-md-row gap-2">
+    <a href="{{ url_for('evaluadores.seleccionar_evento') }}" class="btn btn-outline-primary ">
+
+        <i class="fas fa-sign-out-alt me-1"></i> Volver Atras
+    </a>
+
+
+</div>
+{% endblock %} {% block content %}
+<div class="d-flex justify-content-end mb-3">
+    <a href="{{ url_for('evaluadores.cerrar_sesion') }}" class="btn btn-danger">
+        <i class="fas fa-sign-out-alt me-1"></i> Cerrar Sesión
+    </a>
+</div>
+
+
 <div class="container mt-4">
     <h2 class="text-center">🎯 Panel de Evaluador</h2>
 

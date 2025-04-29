@@ -1,21 +1,31 @@
 {% extends 'base.html' %} {% block content %}
+<div class="d-flex justify-content-end mb-3">
+    <a href="{{ url_for('evaluadores.cerrar_sesion') }}" class="btn btn-danger">
+        <i class="fas fa-sign-out-alt me-1"></i> Cerrar Sesión
+    </a>
+</div>
+
 <div class="container mt-4">
+
+    <!-- Botón de cerrar sesión en la esquina -->
+
+
     <h2 class="text-center mb-4">Seleccionar Evento para Evaluar</h2>
-    <div class="row">
+    <div class="row justify-content-center">
         {% if eventos %} {% for evento in eventos %}
         <div class="col-md-4 mb-4">
-            <div class="card h-100">
+            <div class="card h-100 shadow-sm border-0">
                 <div class="card-body text-center">
-                    <h5 class="card-title">{{ evento.eve_nombre }}</h5>
-                    <p class="card-text">{{ evento.eve_ciudad }}</p>
-                    <a href="{{ url_for('evaluadores.panel_evaluador', eva_id=evaluador.eva_id, evento_id=evento.eve_id) }}" class="btn btn-primary">
-                                Entrar a Evaluar
-                            </a>
+                    <h5 class="card-title fw-bold">{{ evento.eve_nombre }}</h5>
+                    <p class="text-muted">{{ evento.eve_ciudad }}</p>
+                    <a href="{{ url_for('evaluadores.panel_evaluador', eva_id=evaluador.eva_id, evento_id=evento.eve_id) }}" class="btn btn-primary mt-3">
+                            Entrar a Evaluar
+                        </a>
                 </div>
             </div>
         </div>
         {% endfor %} {% else %}
-        <p>No hay eventos disponibles para evaluar.</p>
+        <p class="text-center">No hay eventos disponibles para evaluar.</p>
         {% endif %}
     </div>
 </div>

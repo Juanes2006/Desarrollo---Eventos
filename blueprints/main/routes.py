@@ -6,12 +6,13 @@ from sqlalchemy.orm import joinedload
 from models import Evento, Categoria  
 
 
-@main_bp.route('/')
+
 @main_bp.route('/visitante_web/lista_eventos')
 def lista_eventos():
     eventos = Evento.query.filter_by(eve_estado="Activo").all()
     return render_template('eventos/lista_eventos.html', titulo="Eventos Activos", eventos=eventos)
 
+@main_bp.route('/')
 @main_bp.route('/visitante_web')
 def visitante():
     return render_template('participantes/visitante_web.html')

@@ -1,0 +1,57 @@
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('admin.ventana') }} {% endblock %} {% block eventos_text %} Administrador {% endblock %} {% block nav_links %}
+<div class="d-flex flex-column flex-md-row gap-2">
+    <a class="btn btn-outline-success" href="{{ url_for('admin.agregar_evaluador') }}">
+        <i class="fas fa-plus"></i> Registrar Evaluador
+    </a>
+
+</div>
+{% endblock %} {% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">
+        👥 Gestión de Evaluadores: <br> <strong>{{ evento.eve_nombre }}</strong>
+    </h2>
+
+    <!-- Tabla de Evaluadores -->
+    <div class="card shadow-sm rounded-4 mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>🆔 ID</th>
+                            <th>👤 Nombre</th>
+                            <th>📱 Telefono</th>
+                            <th>📧 Correo</th>
+                            <th>⚙️ Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if evaluadores %} {% for evaluador in evaluadores %}
+                        <tr>
+                            <td>{{ evaluador.eva_id }}</td>
+                            <td>{{ evaluador.eva_nombre }}</td>
+                            <td>{{ evaluador.eva_telefono }}</td>
+                            <td>{{ evaluador.eva_correo }}</td>
+                            <td class="text-center">
+                                <a href="{{ url_for('admin.editar_evaluador', eva_id=evaluador.eva_id) }}" class="btn btn-sm btn-warning">
+                                            ✏️ Editar
+                                        </a>
+                                <a href="{{ url_for('admin.eliminar_evaluador', eva_id=evaluador.eva_id) }}" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro que quieres eliminar este evaluador?');">
+                                            🗑️ Eliminar
+                                        </a>
+                            </td>
+                        </tr>
+                        {% endfor %} {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                🚀 No hay evaluadores asignados a este evento aún.
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

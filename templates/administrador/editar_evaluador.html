@@ -1,0 +1,44 @@
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('admin.ventana') }} {% endblock %} {% block eventos_text %} Administrador_Evento {% endblock %} {% block content %}
+<div class="container my-5">
+    <div class="card shadow-sm rounded-4">
+        <div class="card-header bg-primary text-white text-center">
+            <h3 class="mb-0">🔄 Actualizar Evaluador</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" class="row g-3">
+
+                <div class="col-md-6">
+                    <label for="eva_nombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="eva_nombre" name="eva_nombre" value="{{ evaluador.eva_nombre }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="eva_correo" class="form-label">Correo</label>
+                    <input type="email" class="form-control" id="eva_correo" name="eva_correo" value="{{ evaluador.eva_correo }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="eva_telefono" class="form-label">Teléfono</label>
+                    <input type="text" class="form-control" id="eva_telefono" name="eva_telefono" value="{{ evaluador.eva_telefono }}" required>
+                </div>
+
+                <div class="col-md-12">
+                    <label for="eventos" class="form-label">Asignar Eventos</label>
+                    <select name="eventos" id="eventos" class="form-select" multiple required>
+                        {% for evento in eventos %}
+                            <option value="{{ evento.eve_id }}" {% if evento in evaluador.eventos %}selected{% endif %}>{{ evento.eve_nombre }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-text text-muted">Presiona Ctrl/Cmd para seleccionar varios.</small>
+                </div>
+
+                <div class="col-12 text-center">
+                    <button type="submit" class="btn btn-primary">Actualizar Evaluador</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

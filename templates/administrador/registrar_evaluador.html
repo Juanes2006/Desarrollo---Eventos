@@ -1,0 +1,54 @@
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('admin.ventana') }} {% endblock %} {% block eventos_text %} Administrador_Evento {% endblock %} {% block content %}
+<div class="container my-5">
+    <div class="card shadow-sm rounded-4">
+        <div class="card-header bg-primary text-white text-center">
+            <h3 class="mb-0">➕ Agregar Evaluador</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.agregar_evaluador') }}" class="row g-3">
+
+                <div class="col-md-6">
+                    <label for="eva_id" class="form-label">Documento</label>
+                    <input type="text" class="form-control" name="eva_id" id="eva_id" placeholder="Ingrese el documento" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="eva_nombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" name="eva_nombre" id="eva_nombre" placeholder="Ingrese el nombre" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="eva_correo" class="form-label">Correo electrónico</label>
+                    <input type="email" class="form-control" name="eva_correo" id="eva_correo" placeholder="nombre@ejemplo.com" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="eva_telefono" class="form-label">Teléfono</label>
+                    <input type="tel" class="form-control" name="eva_telefono" id="eva_telefono" placeholder="Ingrese el número de teléfono" required pattern="[0-9]{10,15}">
+                </div>
+
+
+
+                <div class="col-md-12 mb-3">
+                    <label for="eventos" class="form-label"><strong>Asignar Eventos</strong></label>
+                    <select name="eventos" id="eventos" class="form-select" multiple required>
+                        {% for evento in eventos %}
+                            <option value="{{ evento.eve_id }}">{{ evento.eve_nombre }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-text text-muted">
+                        Mantén presionado <strong>Ctrl</strong> (Windows) o <strong>Cmd</strong> (Mac) para seleccionar varios eventos.
+                    </small>
+                </div>
+
+                <div class="col-12 text-center mt-4">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-person-plus"></i> Agregar Evaluador
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

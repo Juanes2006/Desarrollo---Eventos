@@ -1,25 +1,39 @@
-{% extends "base.html" %} {% block content %} {% block eventos_text %} Calificaciones Participantes {% endblock %} {% endblock %} {% block content %}
-<h1>Calificaciones de {{ participante.nombre }}</h1>
-
-<table border="1">
-    <thead>
-        <tr>
-            <th>Criterio</th>
-            <th>Peso</th>
-            <th>Puntaje Obtenido</th>
-            <th>Observaciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for calificacion in calificaciones %}
-        <tr>
-            <td>{{ calificacion.criterio.cri_descripcion }}</td>
-            <td>{{ calificacion.criterio.cri_peso }}%</td>
-            <td>{{ calificacion.puntaje }}</td>
-            <td>{{ calificacion.observacion }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<a href="{{ url_for('administrador.ver_participantes') }}">Volver a la lista de participantes</a> {% endblock %}
+ {% extends 'base.html' %} {% block eventos_url %} {{ url_for('admin.ventana') }} {% endblock %} {% block content %}
+<div class="container my-5">
+    <h2>📊 Calificaciones del Evento: {{ evento.eve_nombre }}</h2>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Participante</th>
+                    <th>Criterio</th>
+                    <th>Evaluador</th>
+                    <th>Calificación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for participante, criterios in calificaciones.items() %}
+                <tr>
+                    <td rowspan="{{ criterios|length }}">{{ participante }}</td>
+                    <td>{{ criterios[0].criterio }}</td>
+                    <td>{{ criterios[0].evaluador }}</td>
+                    <td>{{ criterios[0].valor }}</td>
+                </tr>
+                {% for criterio in criterios[1:] %}
+                <tr>
+                    <td>{{ criterio.criterio }}</td>
+                    <td>{{ criterio.evaluador }}</td>
+                    <td>{{ criterio.valor }}</td>
+                </tr>
+                {% endfor %} {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% if calificaciones|length == 0 %}
+<div class="alert alert-warning mt-4">
+    🚫 No hay calificaciones disponibles para este evento.
+</div>
+{% endif %}
+<div class="text-center mt-4">
+    <a href="{{ url_for('admin.ventana') }}" class="btn btn-primary">Volver al Panel de Administrador</a> {% endblock %}

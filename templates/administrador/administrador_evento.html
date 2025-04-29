@@ -1,76 +1,85 @@
-{% extends 'base.html' %} {% block eventos_url %} {{ url_for('admin.ventana') }} {% endblock %} {% block eventos_text %} Administrador {% endblock %} {% block nav_links %}
+{% extends 'base.html' %} {% block eventos_url %} {{ url_for('admin.ventana') }} {% endblock %} {% block eventos_text %}
+<i class="fas fa-user-cog"></i> Administración {% endblock %} {% block nav_links %}
 <div class="d-flex flex-column flex-md-row gap-2">
     <a class="btn btn-outline-success" href="{{ url_for('eventos.crear_evento') }}">
-        ➕ Crear Evento
+        <i class="fas fa-plus"></i> Crear Evento
     </a>
     <a class="btn btn-outline-info" href="{{ url_for('admin.ver_estadisticas') }}">
-        📊 Estadísticas
+        <i class="fas fa-chart-bar"></i> Estadísticas
     </a>
-</div>
 
+</div>
 {% endblock %} {% block content %}
 <div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white text-center">
+            <h1 class="mb-0"><i class="fas fa-tasks"></i> Panel de Administración</h1>
+            <p class="mb-0">Selecciona y edita los eventos existentes</p>
+        </div>
+        <div class="card-body">
+            <!-- Tabla Responsiva -->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Nombre del Evento</th>
+                            <th scope="col" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if eventos %} {% for evento in eventos %}
+                        <tr>
+                            <td class="align-middle">{{ evento.eve_nombre }}</td>
+                            <td class="text-center">
+                                <div class="d-flex flex-wrap justify-content-center gap-2">
+                                    <a class="btn btn-warning btn-sm" href="{{ url_for('eventos.editar_evento', eve_id=evento.eve_id) }}">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    <a class="btn btn-primary btn-sm" href="{{ url_for('admin.gestionar_inscripciones', eve_id=evento.eve_id) }}">
+                                        <i class="fas fa-users"></i> Gestionar Participantes
+                                    </a>
+                                    <a class="btn btn-secondary btn-sm" href="{{ url_for('admin.gestionar_inscripcion_asis', eve_id=evento.eve_id) }}">
+                                        <i class="fas fa-user-friends"></i> Gestionar Asistentes
+                                    </a>
+                                    {% if evento.eve_estado == "ACTIVO" %}
+                                    <form action="{{ url_for('eventos.cancelar_evento', eve_id=evento.eve_id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-times"></i> Cancelar Evento
+                                            </button>
+                                    </form>
+                                    {% endif %}
+                                    <a href="{{ url_for('admin.gestionar_criterios_admin', evento_id=evento.eve_id) }}" class="btn btn-info btn-sm">
+                                        <i class="fas fa-sliders-h"></i> Gestionar Criterios
+                                    </a>
+                                    <a href="{{ url_for('admin.cargar_instrumento_admin', evento_id=evento.eve_id) }}" class="btn btn-secondary btn-sm">
+                                        <i class="fas fa-file-upload"></i> Cargar Instrumento
+                                    </a>
+                                    <a href="{{ url_for('admin.gestionar_evaluadores', eve_id=evento.eve_id) }}" class="btn btn-dark btn-sm">
+                                        <i class="fas fa-file-upload"></i> Gestionar Evaluadores
+                                    </a>
 
-    <h1 class="text-center">📌 Panel de Administración</h1>
-    <p class="text-muted text-center">Aquí puedes seleccionar y editar los eventos existentes:</p>
-
-    <!-- Tabla Responsiva -->
-    <div class="table-responsive">
-        <table class="table table-striped table-hover shadow-sm mt-3">
-            <thead class="table-dark">
-                <tr>
-                    <th>📅 Nombre del Evento</th>
-                    <th class="text-center">⚙️ Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if eventos %} {% for evento in eventos %}
-                <tr>
-                    <td class="align-middle">{{ evento.eve_nombre }}</td>
-                    <td class="text-center">
-                        <div class="d-flex flex-wrap justify-content-center gap-2">
-                            <a class="btn btn-warning btn-sm" href="{{ url_for('eventos.editar_evento', eve_id=evento.eve_id) }}">
-                                ✏️ Editar
-                            </a>
-                            <a class="btn btn-primary btn-sm" href="{{ url_for('admin.gestionar_inscripciones', eve_id=evento.eve_id) }}">
-                                👥 Gestionar Participantes
-                            </a>
-                            <a class="btn btn-secondary btn-sm" href="{{ url_for('admin.gestionar_inscripcion_asis', eve_id=evento.eve_id) }}">
-                                👥 Gestionar Asistentes
-                            </a> {% if evento.eve_estado == "ACTIVO" %}
-                            <form action="{{ url_for('eventos.cancelar_evento', eve_id=evento.eve_id) }}" method="POST" class="d-inline">
-                                <button type="submit" class="btn btn-danger btn-sm">
-                                    ❌ Cancelar Evento
-                                </button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-
-                {% endfor %} {% else %}
-                <tr>
-                    <td colspan="2" class="text-center text-muted py-3">
-                        🚀 No hay eventos creados.
-                    </td>
-                </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Botón Crear Evento  SOLO SE VE EN LOS MOVILES GRACIAS AL TIPO DE CLASE -->
-    <div class="text-center mb-4 d-md-none">
-        <a class="btn btn-outline-success btn-sm w-100" href="{{ url_for('eventos.crear_evento') }}">
-            ➕ Crear Evento
-        </a>
-        <br><br>
-        <a class="btn btn-outline-info btn-sm w-100" href="{{ url_for('admin.ver_estadisticas') }}">
-                📊 Estadísticas
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %} {% else %}
+                        <tr>
+                            <td colspan="2" class="text-center text-muted py-3">
+                                <i class="fas fa-info-circle"></i> No hay eventos creados.
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer d-md-none text-center">
+            <a class="btn btn-outline-success btn-sm w-100 mb-2" href="{{ url_for('eventos.crear_evento') }}">
+                <i class="fas fa-plus"></i> Crear Evento
             </a>
-
+            <a class="btn btn-outline-info btn-sm w-100" href="{{ url_for('admin.ver_estadisticas') }}">
+                <i class="fas fa-chart-bar"></i> Estadísticas
+            </a>
+        </div>
     </div>
-
-
 </div>
 {% endblock %}

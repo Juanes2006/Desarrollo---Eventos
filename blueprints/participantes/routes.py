@@ -81,6 +81,7 @@ from sqlalchemy import func
 def mi_info():
     participante = None
     eventos_inscritos = []
+   
 
     if request.method == "POST":
         par_id = request.form.get("par_id")
@@ -127,7 +128,12 @@ def mi_info():
                             break
                     
                     # 🔥 3. Instrumento relacionado
+                    # 🔥 3. Instrumento relacionado
                     instrumento = Instrumento.query.filter_by(inst_evento_fk=eve_id).first()
+                    criterios = Criterio.query.filter_by(cri_evento_fk=eve_id).all()
+
+
+                    
 
                     eventos_inscritos.append({
                         'evento': {
@@ -140,8 +146,11 @@ def mi_info():
                         'par_eve_documentos': inscripcion[5],
                         'puntaje_total': puntaje_total,
                         'posicion': posicion,
-                        'instrumento': instrumento  # ⬅️ AÑADIMOS ESTO
+                        'instrumento': instrumento,
+                        'criterios': criterios # ⬅️ AÑADIMOS ESTO
                     })
+                    print("Evento ID en consulta:", eve_id)
+
             else:
                 flash("No se encontró información para el ID proporcionado.", "danger")
 

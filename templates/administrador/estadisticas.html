@@ -21,7 +21,11 @@
                     <td class="align-middle">{{ est.asistentes }}</td>
                     <td class="align-middle">{{ est.participantes }}</td>
                     <td class="align-middle"><strong>{{ est.total }}</strong></td>
-                    <td class="align-middle"><strong>{{ (est.asistentes / est.total * 100) | round(1) }}%</strong></td>
+                    <td class="align-middle">
+                        {% if est.total > 0 %}
+                        <strong>{{ (est.asistentes / est.total * 100) | round(1) }}%</strong> {% else %}
+                        <strong>0%</strong> {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
