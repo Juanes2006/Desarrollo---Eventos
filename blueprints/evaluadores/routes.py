@@ -36,7 +36,7 @@ def panel_evaluador(eva_id, evento_id):
 def seleccionar_evento():
     if 'evaluador_id' not in session:
         flash('Debes iniciar sesión primero.', 'warning')
-        return redirect(url_for('evaluadores.iniciosesion'))
+        return redirect(url_for('evaluadores.login_evaluador'))
 
     eventos = Evento.query.all()
     evaluador = Evaluador.query.filter_by(eva_id=session['evaluador_id']).first()
@@ -261,7 +261,7 @@ def ver_ranking(eva_id, evento_id):
     
     
 @evaluadores_bp.route('/login', methods=['GET', 'POST'])
-def iniciosesion():
+def login_evaluador():
     if request.method == 'POST':
         eva_id = request.form.get('eva_id')  # o correo, dependiendo cómo quieras identificarlo
 
@@ -273,12 +273,44 @@ def iniciosesion():
             return redirect(url_for('evaluadores.seleccionar_evento'))
         else:
             flash('Evaluador no encontrado, verifica tus datos', 'danger')
-            return redirect(url_for('evaluadores.iniciosesion'))
+            return redirect(url_for('evaluadores.login_evaluador'))
 
-    return render_template('evaluadores/inicio_de_sesion.html')
+    return render_template('evaluadores/login.html')
 
-@evaluadores_bp.route('/cerrar_sesion', methods=['POST'])
-def cerrar_sesion():
+@evaluadores_bp.route('/logout',  methods=['GET', 'POST'])
+def logout_evaluador():
     session.pop('evaluador_id', None)  # Elimina el evaluador de la sesión
     flash('Sesión cerrada exitosamente.', 'success')
-    return redirect(url_for('evaluadores.iniciosesion'))  # Redirige al login
+    return redirect(url_for('evaluadores.login_evaluador'))  # Redirige al login
+
+from collections import defaultdict
+
+@evaluadores_bp.route('/administrador/evento/<int:evento_id>/calificaciones')
+def ver_calificaciones_evento(evento_id):
+    evento = Evento.query.get_or_404(evento_id)
+
+    # Traer todas las calificaciones
+    calificaciones_raw = (
+        db.session.query(
+            Participantes.par_nombre,
+            Criterio.cri_descripcion,
+            Evaluador.eva_nombre,
+            Calificacion.cal_valor
+        )
+        .join(Calificacion, Calificacion.cal_participante_fk == Participantes.par_id)
+        .join(Criterio, Criterio.cri_id == Calificacion.cal_criterio_fk)
+        .join(Evaluador, Evaluador.eva_id == Calificacion.cal_evaluador_fk)
+        .filter(Criterio.cri_evento_fk == evento_id)
+        .all()
+    )
+
+    # Agrupar por participante
+    calificaciones = defaultdict(list)
+    for par_nombre, cri_descripcion, eva_nombre, cal_valor in calificaciones_raw:
+        calificaciones[par_nombre].append({
+            'criterio': cri_descripcion,
+            'evaluador': eva_nombre,
+            'valor': cal_valor
+        })
+
+    return render_template('evaluadores/ver_calificaciones.html', evento=evento, calificaciones=calificaciones)

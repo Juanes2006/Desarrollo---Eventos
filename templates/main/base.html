@@ -16,7 +16,10 @@
 
         <div class="container-fluid">
             <img src="{{ url_for('static', filename='logo_nuevo.png') }}" alt="Logo" class="logo">
-            <a class="navbar-brand" href="{% block eventos_url %}{{ url_for('main.lista_eventos') }}{% endblock %}">{% block eventos_text %}Eventos{% endblock %}</a>
+            <a class="navbar-brand" href="{% block eventos_url %}{{ url_for('main.lista_eventos') }}{% endblock %}">
+                {% block eventos_text %}Eventos{% endblock %}
+            </a>
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>

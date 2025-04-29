@@ -68,3 +68,5 @@ def evento_detalle(eve_id):
         .first_or_404()
     )
     return render_template('participantes/detalle_evento.html', evento=evento)
+
+

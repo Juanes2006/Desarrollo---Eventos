@@ -1,47 +1,41 @@
-{% extends 'base.html' %} {% block eventos_text %} PANEL EVALUADOR {% endblock %} {% block nav_links %}
-
+{% extends 'main/base.html' %} {% block eventos_url %}{{ url_for('evaluadores.panel_evaluador') }}{% endblock %} {% block eventos_text %} Panel Evaluador{% endblock %} {% block nav_links %}
 <div class="d-flex flex-column flex-md-row gap-2">
-    <a href="{{ url_for('evaluadores.seleccionar_evento') }}" class="btn btn-outline-primary ">
-
-        <i class="fas fa-sign-out-alt me-1"></i> Volver Atras
+    <a href="{{ url_for('evaluadores.seleccionar_evento') }}" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left me-1"></i> Volver Atrás
     </a>
-
-
 </div>
 {% endblock %} {% block content %}
 <div class="d-flex justify-content-end mb-3">
-    <a href="{{ url_for('evaluadores.cerrar_sesion') }}" class="btn btn-danger">
+    <a href="{{ url_for('evaluadores.logout_evaluador') }}" class="btn btn-danger">
         <i class="fas fa-sign-out-alt me-1"></i> Cerrar Sesión
     </a>
 </div>
 
-
 <div class="container mt-4">
-    <h2 class="text-center">🎯 Panel de Evaluador</h2>
+    <h2 class="text-center mb-4">🎯 Panel del Evaluador</h2>
 
     <!-- Gestión de Instrumentos y Criterios -->
-    <div class="row mt-4">
-        <div class="col-md-6 mb-3">
-            <div class="card shadow-sm p-3">
-                <h4>📋 Gestionar Criterios</h4>
-                <p>Agrega o edita los criterios de evaluación.</p>
-                <a href="{{ url_for('evaluadores.gestionar_criterios', evento_id=evento.eve_id) }}" class="btn btn-primary">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4 h-100">
+                <h4 class="mb-2">📋 Gestionar Criterios</h4>
+                <p>Agrega o edita los criterios de evaluación utilizados para calificar a los participantes.</p>
+                <a href="{{ url_for('evaluadores.gestionar_criterios', evento_id=evento.eve_id) }}" class="btn btn-primary mt-2">
                     Gestionar Criterios
                 </a>
             </div>
         </div>
 
-        <div class="col-md-6 mb-3">
-            <div class="card shadow-sm p-3">
-                <h4>📋 Cargar Instrumento</h4>
-                <p>Agrega o edita el instrumento de evaluación.</p>
-                <a href="{{ url_for('evaluadores.cargar_instrumento', evento_id=evento.eve_id) }}" class="btn btn-primary">
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4 h-100">
+                <h4 class="mb-2">📥 Cargar Instrumento</h4>
+                <p>Sube o modifica el instrumento de evaluación para este evento.</p>
+                <a href="{{ url_for('evaluadores.cargar_instrumento', evento_id=evento.eve_id) }}" class="btn btn-primary mt-2">
                     Cargar Instrumento
                 </a>
             </div>
         </div>
     </div>
-
 
     <!-- Participantes -->
     {% if participantes|length == 0 %}
@@ -49,32 +43,47 @@
         🚫 No hay participantes asignados a este evento.
     </div>
     {% else %}
-    <div class="row mt-4">
+    <div class="row g-3 mt-4">
         {% for p in participantes %}
-        <div class="col-md-6 mb-3">
-            <div class="card shadow-sm p-3">
-                <h4>📋 Ver Participantes </h4>
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4 h-100">
+                <h4 class="mb-2">👤 Calificar Participantes</h4>
                 <p>Gestiona y agrega calificaciones para este participante.</p>
                 <a href="{{ url_for('evaluadores.lista_participantes',
-                                        eva_id=evaluador.eva_id,
-                                        evento_id=evento.eve_id,
-                                        par_id=p.par_id) }}" class="btn btn-success">
-                                        Ver Participantes                    </a>
+                                            eva_id=evaluador.eva_id,
+                                            evento_id=evento.eve_id,
+                                            par_id=p.par_id) }}" class="btn btn-success mt-2">
+                            Ver Participante
+                        </a>
             </div>
         </div>
         {% endfor %}
-        <div class="col-md-6 mb-3">
-            <div class="card shadow-sm p-3">
-                <h4>📋 Ranking </h4>
-                <p>Puedes ver los participantes y sus calificaciones.</p>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4 h-100">
+                <h4 class="mb-2">🏆 Ranking</h4>
+                <p>Consulta el ranking de los participantes basado en sus calificaciones.</p>
                 <a href="{{ url_for('evaluadores.ver_ranking',
                                         eva_id=evaluador.eva_id,
-                                        evento_id=evento.eve_id) }}" class="btn btn-success">
-                                        Ver Ranking                    </a>
+                                        evento_id=evento.eve_id) }}" class="btn btn-success mt-2">
+                        Ver Ranking
+                    </a>
             </div>
         </div>
     </div>
     {% endif %}
 
+    <!-- Calificaciones -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4 text-center">
+                <h4 class="mb-3">📊 Ver Calificaciones</h4>
+                <p>Consulta y revisa las calificaciones de los participantes en este evento.</p>
+                <a href="{{ url_for('evaluadores.ver_calificaciones_evento', evento_id=evento.eve_id) }}" class="btn btn-success">
+                    Ver Calificaciones
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
