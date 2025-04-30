@@ -3,13 +3,14 @@
     <a href="{{ url_for('evaluadores.seleccionar_evento') }}" class="btn btn-outline-primary">
         <i class="fas fa-arrow-left me-1"></i> Volver Atrás
     </a>
-</div>
-{% endblock %} {% block content %}
-<div class="d-flex justify-content-end mb-3">
-    <a href="{{ url_for('evaluadores.logout_evaluador') }}" class="btn btn-danger">
+    <a href="{{ url_for('evaluadores.logout_evaluador') }}" class="btn btn-outline-danger">
         <i class="fas fa-sign-out-alt me-1"></i> Cerrar Sesión
     </a>
 </div>
+
+
+{% endblock %} {% block content %}
+
 
 <div class="container mt-4">
     <h2 class="text-center mb-4">🎯 Panel del Evaluador</h2>

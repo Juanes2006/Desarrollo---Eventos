@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, current_app
 from . import participantes_bp
-from models import db, Participantes,Instrumento ,  ParticipantesEventos, Evento, Criterio, Calificacion
+from models import db, Participantes,Instrumento ,Evaluador,  ParticipantesEventos, Evento, Criterio, Calificacion
 from utilities.files import save_file
 
 
@@ -210,3 +210,30 @@ def ranking_participantes(evento_id):
     return render_template('participantes/ranking.html', ranking=ranking)
 
 
+@participantes_bp.route('/participantes/evento/<int:evento_id>/calificaciones/participante/<int:participante_id>')
+def ver_calificaciones_participante(evento_id, participante_id):
+    evento = Evento.query.get_or_404(evento_id)
+    participante = Participantes.query.get_or_404(participante_id)
+
+    # Consulta las calificaciones de este participante para el evento seleccionado
+    calificaciones = (
+        db.session.query(
+            Criterio.cri_descripcion,
+            Evaluador.eva_nombre,
+            Calificacion.cal_valor
+        )
+        .join(Calificacion, Calificacion.cal_criterio_fk == Criterio.cri_id)
+        .join(Evaluador, Evaluador.eva_id == Calificacion.cal_evaluador_fk)
+        .filter(
+            Criterio.cri_evento_fk == evento_id,
+            Calificacion.cal_participante_fk == participante_id
+        )
+        .all()
+    )
+
+    return render_template(
+        'participantes/calificaciones_participante.html',
+        evento=evento,
+        participante=participante,
+        calificaciones=calificaciones
+    )  

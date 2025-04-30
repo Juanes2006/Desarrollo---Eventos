@@ -1,0 +1,34 @@
+{% extends "base.html" %} {% block content %}
+<div class="container my-4">
+    <h2 class="mb-4">Calificaciones de {{ participante.par_nombre }} - {{ evento.eve_nombre }}</h2>
+    {% if calificaciones %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Criterio</th>
+                    <th scope="col">Evaluador</th>
+                    <th scope="col">Nota</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cal in calificaciones %}
+                <tr>
+                    <td>{{ cal.cri_descripcion }}</td>
+                    <td>{{ cal.eva_nombre }}</td>
+                    <td>{{ cal.cal_valor }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle"></i> Este participante no tiene calificaciones en el evento.
+    </div>
+    {% endif %}
+    <a href="{{ url_for('admin.ver_calificaciones_evento', evento_id=evento.eve_id) }}" class="btn btn-secondary mt-3">
+        <i class="fas fa-arrow-left"></i> Volver a participantes
+    </a>
+</div>
+{% endblock %}

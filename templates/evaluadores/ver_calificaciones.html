@@ -1,37 +1,22 @@
 {% extends 'base.html' %} {% block eventos_url %} {{ url_for('admin.ventana') }} {% endblock %} {% block content %}
-<div class="container my-5">
-    <h2>📊 Calificaciones del Evento: {{ evento.eve_nombre }}</h2>
-    <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>Participante</th>
-                    <th>Criterio</th>
-                    <th>Evaluador</th>
-                    <th>Calificación</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for participante, criterios in calificaciones.items() %}
-                <tr>
-                    <td rowspan="{{ criterios|length }}">{{ participante }}</td>
-                    <td>{{ criterios[0].criterio }}</td>
-                    <td>{{ criterios[0].evaluador }}</td>
-                    <td>{{ criterios[0].valor }}</td>
-                </tr>
-                {% for criterio in criterios[1:] %}
-                <tr>
-                    <td>{{ criterio.criterio }}</td>
-                    <td>{{ criterio.evaluador }}</td>
-                    <td>{{ criterio.valor }}</td>
-                </tr>
-                {% endfor %} {% endfor %}
-            </tbody>
-        </table>
+<div class="container my-4">
+    <h2 class="mb-4">Participantes Calificados - {{ evento.eve_nombre }}</h2>
+    {% if participantes %}
+    <div class="list-group">
+        {% for participante in participantes %}
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ participante.par_nombre }}</span>
+            <a href="{{ url_for('evaluadores.ver_calificaciones_participante', evento_id=evento.eve_id, participante_id=participante.par_id) }}" class="btn btn-primary btn-sm">
+              Ver Calificaciones
+            </a>
+        </div>
+        {% endfor %}
     </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle"></i> No hay participantes calificados en este evento.
+    </div>
+    {% endif %}
 </div>
-{% if calificaciones|length == 0 %}
-<div class="alert alert-warning mt-4">
-    🚫 No hay calificaciones disponibles para este evento.
-</div>
-{% endif %} {% endblock %}
+
+{% endblock %}

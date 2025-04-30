@@ -2,85 +2,149 @@
 <html lang="es">
 
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta name="description" content="Plataforma de gestión de eventos">
+    <meta name="author" content="Tu nombre o el del equipo">
     <title>{{ title if title else "Eventos" }}</title>
 
+    <!-- Bootstrap CSS avanzado -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- CSS personalizado -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        /* Estilos personalizados para un toque más avanzado */
+        
+        body {
+            background: #f9f9f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar-brand img.logo {
+            height: 40px;
+            transition: transform 0.3s ease;
+        }
+        
+        .navbar-brand img.logo:hover {
+            transform: scale(1.1);
+        }
+        
+        footer {
+            background: #ffffff;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
+    <!-- Header / Barra de navegación -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+            <div class="container-fluid">
+                <a class="navbar-brand d-flex align-items-center" href="{% block eventos_url %}{{ url_for('main.lista_eventos') }}{% endblock %}">
+                    <img src="{{ url_for('static', filename='logo_nuevo.png') }}" alt="Logo" class="logo me-2"> {% block eventos_text %}Eventos{% endblock %}
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Alternar navegación">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        {% block nav_links %} {% endblock %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
 
-    <nav class="navbar navbar-expand-lg">
+    <!-- Contenido principal -->
+    <main class="container flex-grow-1 my-4">
+        {% with messages = get_flashed_messages() %} {% if messages %}
+        <div id="flash-messages" class="alert alert-info alert-dismissible fade show" role="alert">
+            {% for msg in messages %}
+            <p class="mb-0">{{ msg }}</p>
+            {% endfor %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+        {% endif %} {% endwith %} {% block content %}
+        <!-- Aquí irá el contenido específico de cada vista -->
+        {% endblock %}
+    </main>
 
-        <div class="container-fluid">
-            <img src="{{ url_for('static', filename='logo_nuevo.png') }}" alt="Logo" class="logo">
-            <a class="navbar-brand" href="{% block eventos_url %}{{ url_for('main.lista_eventos') }}{% endblock %}">
-                {% block eventos_text %}Eventos{% endblock %}
-            </a>
+    <!-- Footer / Pie de página -->
+    <footer class="py-3 mt-auto">
+        <div class="container text-center">
+            <p class="mb-0">&copy; {{ current_year if current_year else "2025" }} - SENASOFT - Todos los derechos reservados.</p>
+        </div>
+    </footer>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    {% block nav_links %} {% endblock %}
-                </ul>
+    <!-- Modal avanzado para información adicional (opcional) -->
+    <div class="modal fade" id="modalInfo" tabindex="-1" aria-labelledby="modalInfoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 id="modalInfoLabel" class="modal-title">{% block modal_title %}Información Adicional{% endblock %}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    {% block modal_content %}
+                    <!-- Contenido opcional específico para cada vista -->
+                    {% endblock %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
             </div>
         </div>
-    </nav>
-
-    <div class="container mt-3">
-        {% with messages = get_flashed_messages() %} {% if messages %}
-        <div id="flash-messages" class="alert alert-info">
-            {% for msg in messages %}
-            <p>{{ msg }}</p>
-            {% endfor %}
-        </div>
-        {% endif %} {% endwith %} {% block content %}{% endblock %}
     </div>
 
+    <!-- Scripts: Bootstrap Bundle (incluye Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Script para el manejo de mensajes flash avanzado -->
     <script>
-        // DESPUES DE 3 SEGUNDOS SE BORRA EL MENSAJE
-        setTimeout(function() {
-            let flashMessages = document.getElementById('flash-messages');
-            if (flashMessages) {
-                flashMessages.style.transition = "opacity 0.5s";
-                flashMessages.style.opacity = "0";
-                setTimeout(() => flashMessages.remove(), 500);
-            }
-        }, 5000);
+        document.addEventListener("DOMContentLoaded", function() {
+            // Se ocultan los mensajes flash después de 5 segundos con animación
+            setTimeout(() => {
+                const flashMessages = document.getElementById('flash-messages');
+                if (flashMessages) {
+                    flashMessages.classList.remove('show');
+                    flashMessages.classList.add('fade');
+                    setTimeout(() => flashMessages.remove(), 500);
+                }
+            }, 5000);
+        });
     </script>
-    <script>
-        window.setTimeout(function() {
-            document.querySelectorAll('.alert').forEach(function(alert) {
-                alert.style.transition = "opacity 0.5s ease";
-                alert.style.opacity = 0;
-                setTimeout(function() {
-                    alert.remove();
-                }, 500); // tiempo en que se oculta
-            });
-        }, 5000);
-    </script>
+
+    <!-- Script para copiar información del evento -->
     <script>
         function copiarClave() {
-            var clave = document.getElementById('claveEvento').innerText;
-
-            navigator.clipboard.writeText(clave).then(function() {
-                alert("Clave copiada al portapapeles: " + clave);
-            }).catch(function(err) {
-                console.error("Error al copiar la clave: ", err);
-            });
+            const clave = document.getElementById('claveEvento').innerText;
+            navigator.clipboard.writeText(clave).then(() => {
+                // Uso de Toasts de Bootstrap para notificar
+                const toastHTML = `
+          <div class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+              <div class="toast-body">
+                Clave copiada al portapapeles: ${clave}
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+            </div>
+          </div>`;
+                const toastContainer = document.createElement('div');
+                toastContainer.innerHTML = toastHTML;
+                document.body.appendChild(toastContainer);
+                const toastElement = toastContainer.querySelector('.toast');
+                const bsToast = new bootstrap.Toast(toastElement, {
+                    delay: 3000
+                });
+                bsToast.show();
+                // Elimina el contenedor después de mostrarse
+                toastElement.addEventListener('hidden.bs.toast', () => {
+                    toastContainer.remove();
+                });
+            }).catch(err => console.error("Error al copiar la clave: ", err));
         }
     </script>
-
-
-
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

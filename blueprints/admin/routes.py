@@ -194,78 +194,28 @@ def toggle_inscripcion(evento_id, tipo):
     flash("Estado de inscripciones actualizado correctamente.", "success")
     return redirect(request.referrer)
 
-# Listar y agregar criterios
-@admin_bp.route('/criterios/<int:evento_id>', methods=['GET', 'POST'])
-def gestionar_criterios(evento_id):
-    criterios = Criterio.query.filter_by(cri_evento_fk=evento_id).all()
-    instrumento = Instrumento.query.filter_by(inst_evento_fk=evento_id).first()
-    participantes = db.session.query(Participantes).join(ParticipantesEventos).filter(
-        ParticipantesEventos.par_eve_evento_fk == evento_id,
-        ParticipantesEventos.par_estado == 'ACEPTADO'  # si quieres sólo aceptados
-    ).all()
-
-    if request.method == 'POST':
-        accion = request.form.get('accion')
-
-        if accion == 'crear':
-            descripcion = request.form.get('descripcion')
-            peso = request.form.get('peso')
-
-            nuevo_criterio = Criterio(
-                cri_descripcion=descripcion,
-                cri_peso=float(peso),
-                cri_evento_fk=evento_id
-            )
-            db.session.add(nuevo_criterio)
-            db.session.commit()
-            flash('Criterio creado exitosamente.', 'success')
-
-        elif accion == 'editar':
-            criterio_id = request.form.get('criterio_id')
-            criterio = Criterio.query.get(criterio_id)
-            if criterio:
-                criterio.cri_descripcion = request.form.get('descripcion')
-                criterio.cri_peso = float(request.form.get('peso'))
-                db.session.commit()
-                flash('Criterio actualizado exitosamente.', 'success')
-            else:
-                flash('Criterio no encontrado.', 'danger')
-
-        elif accion == 'eliminar':
-            criterio_id = request.form.get('criterio_id')
-            criterio = Criterio.query.get(criterio_id)
-            if criterio:
-                db.session.delete(criterio)
-                db.session.commit()
-                flash('Criterio eliminado exitosamente.', 'success')
-            else:
-                flash('Criterio no encontrado.', 'danger')
-
-        return redirect(url_for('admin.gestionar_criterios', evento_id=evento_id))
-
-    return render_template('administrador/criterios.html', criterios=criterios, evento_id=evento_id , instrumento=instrumento, participantes=participantes)
 
 # Editar criterio
-@admin_bp.route('/criterios/<int:criterio_id>/editar', methods=['GET', 'POST'])
-def editar_criterio(criterio_id):
-    criterio = Criterio.query.get_or_404(criterio_id)
-    if request.method == 'POST':
-        criterio.cri_descripcion = request.form.get('descripcion')
-        criterio.cri_peso = request.form.get('peso')
-        criterio.cri_evento_fk = request.form.get('evento_id')
-        db.session.commit()
-        flash('Criterio actualizado', 'success')
-        return redirect(url_for('admin.gestionar_criterios'))
-    return render_template('administrador/editar_criterio.html', criterio=criterio)
+#@admin_bp.route('/criterios/<int:criterio_id>/editar', methods=['GET', 'POST'])
+#def editar_criterio(criterio_id):
+    #criterio = Criterio.query.get_or_404(criterio_id)
+    #if request.method == 'POST':
+        #criterio.cri_descripcion = request.form.get('descripcion')
+        #criterio.cri_peso = request.form.get('peso')
+        #criterio.cri_evento_fk = request.form.get('evento_id')
+       # db.session.commit()
+      #  flash('Criterio actualizado', 'success')
+     #   return redirect(url_for('admin.gestionar_criterios'))
+    #return render_template('administrador/editar_criterio.html', criterio=criterio)
 
 # Eliminar criterio
-@admin_bp.route('/criterios/<int:criterio_id>/eliminar', methods=['POST'])
-def eliminar_criterio(criterio_id):
-    criterio = Criterio.query.get_or_404(criterio_id)
-    db.session.delete(criterio)
-    db.session.commit()
-    flash('Criterio eliminado', 'success')
-    return redirect(url_for('administrador.gestionar_criterios'))
+#@admin_bp.route('/criterios/<int:criterio_id>/eliminar', methods=['POST'])
+#def eliminar_criterio(criterio_id):
+ #   criterio = Criterio.query.get_or_404(criterio_id)
+  #  db.session.delete(criterio)
+   # db.session.commit()
+    #flash('Criterio eliminado', 'success')
+    #return redirect(url_for('administrador.gestionar_criterios'))
 
 
 @admin_bp.route('/instrumentos', methods=['GET', 'POST'])
@@ -300,6 +250,7 @@ def cargar_instrumentos():
 @admin_bp.route('/criterios/<int:evento_id>', methods=['GET', 'POST'])
 def gestionar_criterios_admin(evento_id):
     # Consulta los criterios actuales y el instrumento
+    evento = Evento.query.get_or_404(evento_id)
     criterios = Criterio.query.filter_by(cri_evento_fk=evento_id).all()
     instrumento = Instrumento.query.filter_by(inst_evento_fk=evento_id).first()
     
@@ -322,6 +273,8 @@ def gestionar_criterios_admin(evento_id):
             # Si al agregar el nuevo peso se superaría el 100%, se muestra el error y se redirige.
             if suma_actual + peso > 100:
                 flash(f'Error: La suma de los porcentajes no puede superar el 100% (actual: {suma_actual}%, intento agregar: {peso}%).', 'danger')
+                flash(f'Por favor, ajuste el peso del nuevo criterio, queda por agregar un {100 - suma_actual}%.', 'danger')
+
                 return redirect(url_for('admin.gestionar_criterios_admin', evento_id=evento_id))
             else:
                 nuevo_criterio = Criterio(
@@ -373,7 +326,7 @@ def gestionar_criterios_admin(evento_id):
             else:
                 flash('Criterio no encontrado.', 'danger')
 
-        return redirect(url_for('admin.gestionar_criterios_admin', evento_id=evento_id))
+        return redirect(url_for('admin.gestionar_criterios_admin', evento_id=evento_id, ))
 
     # GET method: se calcula el total de peso asignado
     total_peso = db.session.query(db.func.sum(Criterio.cri_peso)).filter_by(cri_evento_fk=evento_id).scalar() or 0
@@ -383,7 +336,8 @@ def gestionar_criterios_admin(evento_id):
         criterios=criterios,
         instrumento=instrumento,
         evento_id=evento_id,
-        total_peso=round(total_peso, 2)
+        total_peso=round(total_peso, 2),
+        evento=evento
     )
 
     # Verificación del total actual para mostrar feedback
@@ -393,6 +347,8 @@ def gestionar_criterios_admin(evento_id):
 # Ruta para cargar el instrumento de evaluación
 @admin_bp.route('/administrador/evento/<int:evento_id>/instrumento', methods=['GET', 'POST'])
 def cargar_instrumento_admin(evento_id):
+    evento = Evento.query.get_or_404(evento_id)
+
     instrumento_existente = Instrumento.query.filter_by(inst_evento_fk=evento_id).first()
 
     if request.method == 'POST':
@@ -418,7 +374,7 @@ def cargar_instrumento_admin(evento_id):
 
         return redirect(url_for('admin.ventana', evento_id=evento_id))
 
-    return render_template('administrador/cargar_instrumento.html', instrumento=instrumento_existente, evento_id=evento_id)
+    return render_template('administrador/cargar_instrumento.html', instrumento=instrumento_existente, evento_id=evento_id, evento=evento)
 from sqlalchemy import func, desc
 @admin_bp.route('/administrador/evento/<int:evento_id>/ranking')
 def ver_ranking_admin(evento_id):
@@ -460,20 +416,49 @@ from collections import defaultdict
 def ver_calificaciones_evento(evento_id):
     evento = Evento.query.get_or_404(evento_id)
 
-    # Traer todas las calificaciones
-    calificaciones_raw = (
+    # Consulta los participantes que tengan calificaciones asociadas a criterios del evento
+    participantes_calificados = (
+        db.session.query(Participantes)
+        .join(Calificacion, Calificacion.cal_participante_fk == Participantes.par_id)
+        .join(Criterio, Criterio.cri_id == Calificacion.cal_criterio_fk)
+        .filter(Criterio.cri_evento_fk == evento_id)
+        .distinct()
+        .all()
+    )
+
+    return render_template(
+        'administrador/ver_calificaciones.html',
+        evento=evento,
+        participantes=participantes_calificados
+    )
+@admin_bp.route('/administrador/evento/<int:evento_id>/calificaciones/participante/<int:participante_id>')
+def ver_calificaciones_participante(evento_id, participante_id):
+    evento = Evento.query.get_or_404(evento_id)
+    participante = Participantes.query.get_or_404(participante_id)
+
+    # Consulta las calificaciones de este participante para el evento seleccionado
+    calificaciones = (
         db.session.query(
-            Participantes.par_nombre,
             Criterio.cri_descripcion,
             Evaluador.eva_nombre,
             Calificacion.cal_valor
         )
-        .join(Calificacion, Calificacion.cal_participante_fk == Participantes.par_id)
-        .join(Criterio, Criterio.cri_id == Calificacion.cal_criterio_fk)
+        .join(Calificacion, Calificacion.cal_criterio_fk == Criterio.cri_id)
         .join(Evaluador, Evaluador.eva_id == Calificacion.cal_evaluador_fk)
-        .filter(Criterio.cri_evento_fk == evento_id)
+        .filter(
+            Criterio.cri_evento_fk == evento_id,
+            Calificacion.cal_participante_fk == participante_id
+        )
         .all()
     )
+
+    return render_template(
+        'administrador/calificaciones_participante.html',
+        evento=evento,
+        participante=participante,
+        calificaciones=calificaciones
+    )
+
 
     # Agrupar por participante
     calificaciones = defaultdict(list)

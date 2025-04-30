@@ -65,6 +65,9 @@
                 {% endif %}
 
                 <br>
+                <a href="{{ url_for('participantes.ver_calificaciones_participante', participante_id=participante.par_id, evento_id=evento.evento.eve_id) }}" class="btn btn-warning mt-2">
+                    Ver calificaciones
+                </a>
 
                 <a href="{{ url_for('participantes.modificar_participante', user_id=participante.par_id, evento_id=evento.evento.eve_id) }}" class="btn btn-warning mt-2">
                     Editar Información

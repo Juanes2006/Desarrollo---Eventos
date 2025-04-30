@@ -53,55 +53,98 @@ def seleccionar_evento():
 
 @evaluadores_bp.route('/criterios/<int:evento_id>', methods=['GET', 'POST'])
 def gestionar_criterios(evento_id):
+    # Consulta los criterios actuales y el instrumento
+    evento = Evento.query.get_or_404(evento_id)
     criterios = Criterio.query.filter_by(cri_evento_fk=evento_id).all()
     instrumento = Instrumento.query.filter_by(inst_evento_fk=evento_id).first()
-    participantes = db.session.query(Participantes).join(ParticipantesEventos).filter(
-        ParticipantesEventos.par_eve_evento_fk == evento_id,
-        ParticipantesEventos.par_estado == 'ACEPTADO'  # si quieres sólo aceptados
-    ).all()
-
+    
     if request.method == 'POST':
         accion = request.form.get('accion')
+        peso_str = request.form.get('peso')
+
+        # Convertir el peso a número flotante, en caso de error, mostrar mensaje y redirigir.
+        try:
+            peso = float(peso_str) if peso_str else 0
+        except ValueError:
+            flash('El peso ingresado no es válido.', 'danger')
+            return redirect(url_for('admin.gestionar_criterios_admin', evento_id=evento_id))
 
         if accion == 'crear':
             descripcion = request.form.get('descripcion')
-            peso = request.form.get('peso')
+            # Se consulta la suma actual de pesos directamente desde la base de datos.
+            suma_actual = db.session.query(db.func.sum(Criterio.cri_peso)).filter_by(cri_evento_fk=evento_id).scalar() or 0
 
-            nuevo_criterio = Criterio(
-                cri_descripcion=descripcion,
-                cri_peso=float(peso),
-                cri_evento_fk=evento_id
-            )
-            db.session.add(nuevo_criterio)
-            db.session.commit()
-            flash('Criterio creado exitosamente.', 'success')
+            # Si al agregar el nuevo peso se superaría el 100%, se muestra el error y se redirige.
+            if suma_actual + peso > 100:
+                flash(f'Error: La suma de los porcentajes no puede superar el 100% (actual: {suma_actual}%, intento agregar: {peso}%).', 'danger')
+                flash(f'Por favor, ajuste el peso del nuevo criterio, queda por agregar un {100 - suma_actual}%.', 'danger')
+
+                return redirect(url_for('admin.gestionar_criterios_admin', evento_id=evento_id))
+            else:
+                nuevo_criterio = Criterio(
+                    cri_descripcion=descripcion,
+                    cri_peso=peso,
+                    cri_evento_fk=evento_id
+                )
+                db.session.add(nuevo_criterio)
+                db.session.commit()
+                flash('Criterio creado exitosamente.', 'success')
 
         elif accion == 'editar':
             criterio_id = request.form.get('criterio_id')
             criterio = Criterio.query.get(criterio_id)
+
             if criterio:
-                criterio.cri_descripcion = request.form.get('descripcion')
-                criterio.cri_peso = float(request.form.get('peso'))
-                db.session.commit()
-                flash('Criterio actualizado exitosamente.', 'success')
+                # Se calcula la suma de los pesos excluyendo el criterio que se pretende actualizar.
+                suma_sin_este = db.session.query(db.func.sum(Criterio.cri_peso)).filter(
+                    Criterio.cri_evento_fk == evento_id,
+                    Criterio.cri_id != criterio.cri_id
+                ).scalar() or 0
+
+                if suma_sin_este + peso > 100:
+                    flash(f'Error: La suma de los porcentajes no puede superar el 100% (actual sin este: {suma_sin_este}%, intento editar a: {peso}%).', 'danger')
+                    return redirect(url_for('admin.gestionar_criterios_admin', evento_id=evento_id))
+                else:
+                    criterio.cri_descripcion = request.form.get('descripcion')
+                    criterio.cri_peso = peso
+                    db.session.commit()
+                    flash('Criterio actualizado exitosamente.', 'success')
             else:
                 flash('Criterio no encontrado.', 'danger')
 
         elif accion == 'eliminar':
             criterio_id = request.form.get('criterio_id')
             criterio = Criterio.query.get(criterio_id)
+
             if criterio:
-                db.session.delete(criterio)
-                db.session.commit()
-                flash('Criterio eliminado exitosamente.', 'success')
+                calificaciones_vinculadas = Calificacion.query.filter_by(cal_criterio_fk=criterio_id).count()
+                if calificaciones_vinculadas > 0:
+                    flash(
+                        f'No se puede eliminar el criterio "{criterio.cri_descripcion}" porque tiene {calificaciones_vinculadas} calificación(es) asociada(s).',
+                        'danger'
+                    )
+                else:
+                    db.session.delete(criterio)
+                    db.session.commit()
+                    flash('Criterio eliminado exitosamente.', 'success')
             else:
                 flash('Criterio no encontrado.', 'danger')
 
-        return redirect(url_for('evaluadores.gestionar_criterios', evento_id=evento_id))
+        return redirect(url_for('admin.gestionar_criterios_admin', evento_id=evento_id, ))
 
-    return render_template('evaluadores/criterios.html', criterios=criterios, evento_id=evento_id , instrumento=instrumento, participantes=participantes)
+    # GET method: se calcula el total de peso asignado
+    total_peso = db.session.query(db.func.sum(Criterio.cri_peso)).filter_by(cri_evento_fk=evento_id).scalar() or 0
 
+    return render_template(
+        'evaluadores/criterios.html',
+        criterios=criterios,
+        instrumento=instrumento,
+        evento_id=evento_id,
+        total_peso=round(total_peso, 2),
+        evento=evento
+    )
 
+    # Verificación del total actual para mostrar feedback
 @evaluadores_bp.route('/evaluador/evento/<int:evento_id>/instrumento', methods=['GET', 'POST'])
 def cargar_instrumento(evento_id):
     instrumento_existente = Instrumento.query.filter_by(inst_evento_fk=evento_id).first()
@@ -285,32 +328,50 @@ def logout_evaluador():
 
 from collections import defaultdict
 
-@evaluadores_bp.route('/administrador/evento/<int:evento_id>/calificaciones')
+@evaluadores_bp.route('/evaluador/evento/<int:evento_id>/calificaciones')
 def ver_calificaciones_evento(evento_id):
     evento = Evento.query.get_or_404(evento_id)
 
-    # Traer todas las calificaciones
-    calificaciones_raw = (
+    # Consulta los participantes que tengan calificaciones asociadas a criterios del evento
+    participantes_calificados = (
+        db.session.query(Participantes)
+        .join(Calificacion, Calificacion.cal_participante_fk == Participantes.par_id)
+        .join(Criterio, Criterio.cri_id == Calificacion.cal_criterio_fk)
+        .filter(Criterio.cri_evento_fk == evento_id)
+        .distinct()
+        .all()
+    )
+
+    return render_template(
+        'evaluadores/ver_calificaciones.html',
+        evento=evento,
+        participantes=participantes_calificados
+    )
+    
+@evaluadores_bp.route('/evento/<int:evento_id>/calificaciones/participante/<int:participante_id>')
+def ver_calificaciones_participante(evento_id, participante_id):
+    evento = Evento.query.get_or_404(evento_id)
+    participante = Participantes.query.get_or_404(participante_id)
+
+    # Consulta las calificaciones de este participante para el evento seleccionado
+    calificaciones = (
         db.session.query(
-            Participantes.par_nombre,
             Criterio.cri_descripcion,
             Evaluador.eva_nombre,
             Calificacion.cal_valor
         )
-        .join(Calificacion, Calificacion.cal_participante_fk == Participantes.par_id)
-        .join(Criterio, Criterio.cri_id == Calificacion.cal_criterio_fk)
+        .join(Calificacion, Calificacion.cal_criterio_fk == Criterio.cri_id)
         .join(Evaluador, Evaluador.eva_id == Calificacion.cal_evaluador_fk)
-        .filter(Criterio.cri_evento_fk == evento_id)
+        .filter(
+            Criterio.cri_evento_fk == evento_id,
+            Calificacion.cal_participante_fk == participante_id
+        )
         .all()
     )
 
-    # Agrupar por participante
-    calificaciones = defaultdict(list)
-    for par_nombre, cri_descripcion, eva_nombre, cal_valor in calificaciones_raw:
-        calificaciones[par_nombre].append({
-            'criterio': cri_descripcion,
-            'evaluador': eva_nombre,
-            'valor': cal_valor
-        })
-
-    return render_template('evaluadores/ver_calificaciones.html', evento=evento, calificaciones=calificaciones)
+    return render_template(
+        'evaluadores/calificaciones_participante.html',
+        evento=evento,
+        participante=participante,
+        calificaciones=calificaciones
+    )
