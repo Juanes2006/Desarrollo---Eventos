@@ -60,7 +60,7 @@ def save_file(file, folder, allowed_extensions):
 # MODELS DE LA BASE DE DATOS
 # ------------------------------------------------------------------
 # Conexión a MySQL con pymysql
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/eventos_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@localhost/eventos_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)

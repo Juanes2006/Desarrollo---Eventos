@@ -14,7 +14,7 @@ def crear_evento():
         lugar = request.form.get("lugar")
         fecha_inicio_str = request.form.get("fecha_inicio")
         fecha_fin_str = request.form.get("fecha_fin")
-        cobro_str = request.form.get("cobro")
+        cobro_str = request.form.get("cobro", default="No")
         cupos_str = request.form.get("cupos")
 
         fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d") if fecha_inicio_str else None

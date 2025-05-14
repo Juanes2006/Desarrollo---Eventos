@@ -2,7 +2,7 @@ import os
 
 class Config:
     SECRET_KEY = "clave_secreta_para_flash"
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:@localhost/eventos_db'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:root@localhost/eventos_db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Carpetas de uploads

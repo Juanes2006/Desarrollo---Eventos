@@ -127,7 +127,7 @@ def agregar_area():
         db.session.commit()
 
         flash(f"Área '{are_nombre}' agregada exitosamente.", "success")
-        return redirect(url_for("agregar_area"))
+        return redirect(url_for("admin.agregar_area"))
 
     return render_template("superadmin/agregar_area.html")
 
@@ -148,7 +148,7 @@ def agregar_categoria():
         db.session.commit()
 
         flash(f"Categoría '{cat_nombre}' agregada exitosamente al área.", "success")
-        return redirect(url_for("agregar_categoria"))
+        return redirect(url_for("admin.agregar_categoria"))
 
     # Para el método GET, obtener todas las áreas disponibles para el select
     areas = Area.query.all()
